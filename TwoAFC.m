@@ -12,13 +12,13 @@ TaskParameters = BpodSystem.ProtocolSettings;
 if isempty(fieldnames(TaskParameters))
     %% General
     TaskParameters.GUI.ITI = 0; % (s)
-    TaskParameters.GUI.ChoiceDeadLine = 10;
-    TaskParameters.GUI.TimeOutIncorrectChoice = 0.1; % (s)
+    TaskParameters.GUI.ChoiceDeadLine = 20;
+    TaskParameters.GUI.TimeOutIncorrectChoice = 3; % (s)
     TaskParameters.GUI.TimeOutBrokeFixation = 5; % (s)
     TaskParameters.GUI.TimeOutEarlyWithdrawal = 5; % (s)
-    TaskParameters.GUI.TimeOutSkippedFeedback = 0.1; % (s)
+    TaskParameters.GUI.TimeOutSkippedFeedback = 3; % (s)
     TaskParameters.GUI.PercentAuditory = 1;
-    TaskParameters.GUI.StartEasyTrials = 50;
+    TaskParameters.GUI.StartEasyTrials = 75;
     TaskParameters.GUI.Percent50Fifty = 0;
     TaskParameters.GUI.PercentCatch = 0;
     TaskParameters.GUI.CatchError = true;
@@ -27,15 +27,15 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIPanels.General = {'ITI','ChoiceDeadLine','TimeOutIncorrectChoice','TimeOutBrokeFixation','TimeOutEarlyWithdrawal','TimeOutSkippedFeedback','PercentAuditory','StartEasyTrials','Percent50Fifty','PercentCatch','CatchError','Ports_LMR'};    
     %% BiasControl
     TaskParameters.GUI.TrialSelection = 1;
-    TaskParameters.GUI.RewardAmountL = 1.;  
-    TaskParameters.GUI.RewardAmountR = 1.; 
+    TaskParameters.GUI.RewardAmountL = 12;  
+    TaskParameters.GUI.RewardAmountR = 12; 
     TaskParameters.GUIMeta.TrialSelection.Style = 'popupmenu';
     TaskParameters.GUIMeta.TrialSelection.String = {'Flat','Manual','BiasCorrecting','Competitive'};
     TaskParameters.GUIPanels.BiasControl = {'TrialSelection','RewardAmountL','RewardAmountR'};
     %% StimDelay
-    TaskParameters.GUI.StimDelayMin = 0.15;
-    TaskParameters.GUI.StimDelayMax = 0.2;
-    TaskParameters.GUI.StimDelayTau = 0.3;
+    TaskParameters.GUI.StimDelayMin = 0.06;
+    TaskParameters.GUI.StimDelayMax = 0.15;
+    TaskParameters.GUI.StimDelayTau = 0.1;
     TaskParameters.GUI.StimDelay = TaskParameters.GUI.StimDelayMin;
     TaskParameters.GUIMeta.StimDelay.Style = 'text';
     TaskParameters.GUIPanels.StimDelay = {'StimDelayMin','StimDelayMax','StimDelayTau','StimDelay'};
@@ -43,12 +43,12 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.FeedbackDelaySelection = 1;
     TaskParameters.GUIMeta.FeedbackDelaySelection.Style = 'popupmenu';
     TaskParameters.GUIMeta.FeedbackDelaySelection.String = {'Fix','AutoIncr','TruncExp'};
-    TaskParameters.GUI.FeedbackDelayMin = 0.01;
-    TaskParameters.GUI.FeedbackDelayTau = 0.02;
-    TaskParameters.GUI.FeedbackDelayMax = 0.3;
+    TaskParameters.GUI.FeedbackDelayMin = 0.5;
+    TaskParameters.GUI.FeedbackDelayTau = 0.75;
+    TaskParameters.GUI.FeedbackDelayMax = 1.5;
     TaskParameters.GUI.FeedbackDelayMinTarget = 1;
     TaskParameters.GUI.FeedbackDelayTauTarget = 1.5;        
-    TaskParameters.GUI.FeedbackDelayMaxTarget = 8;
+    TaskParameters.GUI.FeedbackDelayMaxTarget = 6;
     TaskParameters.GUI.FeedbackDelayIncrMinTau = 0.01;
     TaskParameters.GUI.FeedbackDelayIncrMax = 0.05;
     TaskParameters.GUI.FeedbackDelayGrace = 0.3;
@@ -60,7 +60,7 @@ if isempty(fieldnames(TaskParameters))
         'FeedbackDelayIncrMinTau','FeedbackDelayIncrMax',...
         'FeedbackDelayGrace','FeedbackDelay'};
     %% Auditory Params
-    TaskParameters.GUI.AuditoryAlpha = 0.1;
+    TaskParameters.GUI.AuditoryAlpha = 0.5;
     TaskParameters.GUI.LeftBiasAud = 0.5;
     TaskParameters.GUIMeta.LeftBiasAud.Style = 'text';
     TaskParameters.GUI.SumRates = 100;
@@ -70,7 +70,7 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.MinSampleAudMax = 0.3;
     TaskParameters.GUI.MinSampleAudAutoincrement = true;
     TaskParameters.GUIMeta.MinSampleAudAutoincrement.Style = 'checkbox';
-    TaskParameters.GUI.MinSampleAudIncr = 0.05;
+    TaskParameters.GUI.MinSampleAudIncr = 0.01;
     TaskParameters.GUI.MinSampleAudDecr = 0.02;
     TaskParameters.GUI.MinSampleAud = TaskParameters.GUI.MinSampleAudMin;
     TaskParameters.GUIMeta.MinSampleAud.Style = 'text';
