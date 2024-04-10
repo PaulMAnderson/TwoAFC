@@ -224,11 +224,14 @@ BpodSystem.ProtocolFigures.ParameterGUI.Position = TaskParameters.Figures.Parame
 
 %% Arduino controller activation
 
-% Make the arduino controlling cameras etc. start here
-BpodSystem.PluginObjects.SerialConnection = connectTimerArduino;
-pause(2); % Need to wait for the connection to actually go live
-write(BpodSystem.PluginObjects.SerialConnection,'A','STRING'); %  'A' means run all (cam & barcodes)
-pause(0.5);
+computerName = getenv('COMPUTERNAME');
+if strcmp(computerName,'CIRCE')
+    % Make the arduino controlling cameras etc. start here
+    BpodSystem.PluginObjects.SerialConnection = connectTimerArduino;
+    pause(2); % Need to wait for the connection to actually go live
+    write(BpodSystem.PluginObjects.SerialConnection,'A','STRING'); %  'A' means run all (cam & barcodes)
+    pause(0.5);
+end
 RunSession = true;
 
 %% Main loop
