@@ -17,20 +17,19 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.TimeOutBrokeFixation = 5; % (s)
     TaskParameters.GUI.TimeOutEarlyWithdrawal = 5; % (s)
     TaskParameters.GUI.TimeOutSkippedFeedback = 3; % (s)
-    TaskParameters.GUI.PercentAuditory = 1;
     TaskParameters.GUI.StartEasyTrials = 75;
     TaskParameters.GUI.Percent50Fifty = 0;
     TaskParameters.GUI.PercentCatch = 0;
     TaskParameters.GUI.CatchError = true;
     TaskParameters.GUIMeta.CatchError.Style = 'checkbox';
     TaskParameters.GUI.Ports_LMR = 123;
-    TaskParameters.GUIPanels.General = {'ITI','ChoiceDeadLine','TimeOutIncorrectChoice','TimeOutBrokeFixation','TimeOutEarlyWithdrawal','TimeOutSkippedFeedback','PercentAuditory','StartEasyTrials','Percent50Fifty','PercentCatch','CatchError','Ports_LMR'};    
+    TaskParameters.GUIPanels.General = {'ITI','ChoiceDeadLine','TimeOutIncorrectChoice','TimeOutBrokeFixation','TimeOutEarlyWithdrawal','TimeOutSkippedFeedback','StartEasyTrials','Percent50Fifty','PercentCatch','CatchError','Ports_LMR'};    
     %% BiasControl
     TaskParameters.GUI.TrialSelection = 1;
     TaskParameters.GUI.RewardAmountL = 12;  
     TaskParameters.GUI.RewardAmountR = 12; 
     TaskParameters.GUIMeta.TrialSelection.Style = 'popupmenu';
-    TaskParameters.GUIMeta.TrialSelection.String = {'Flat','Manual','BiasCorrecting','Competitive'};
+    TaskParameters.GUIMeta.TrialSelection.String = {'Flat','Manual','BiasCorrecting'};
     TaskParameters.GUIPanels.BiasControl = {'TrialSelection','RewardAmountL','RewardAmountR'};
     %% StimDelay
     TaskParameters.GUI.StimDelayMin = 0.06;
@@ -119,6 +118,13 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.Figures.OutcomePlot.Position = [200, 200, 1000, 400];
     TaskParameters.Figures.ParameterGUI.Position =  [9, 454, 1474, 562];
     
+    %% Add a closing function to a figure 
+    % Is an attempt to allow Bpod to control external equipment upon
+    % protocol end (in the inital case it should send a serial command to
+    % an Arduino)
+    TaskParameters.CloseFunction = @stopSyncArduino;
+
+
 end
 
 BpodParameterGUI('init', TaskParameters);
@@ -139,7 +145,7 @@ BpodSystem.Data.Custom.ST = [];
 BpodSystem.Data.Custom.Rewarded = false(0);
 BpodSystem.Data.Custom.RewardMagnitude = [TaskParameters.GUI.RewardAmountL  TaskParameters.GUI.RewardAmountR];
 BpodSystem.Data.Custom.TrialNumber = [];
-BpodSystem.Data.Custom.AuditoryTrial = rand(1,2) < TaskParameters.GUI.PercentAuditory;
+% BpodSystem.Data.Custom.AuditoryTrial = rand(1,2) < TaskParameters.GUI.PercentAuditory;
 %RMM 16.05.23
 BpodSystem.Data.Custom.StartEasyTrial = TaskParameters.GUI.StartEasyTrials;
 %RMM
@@ -147,50 +153,34 @@ BpodSystem.Data.Custom.StartEasyTrial = TaskParameters.GUI.StartEasyTrials;
 
 % make auditory stimuli for first trials
 for a = 1:2
-    if BpodSystem.Data.Custom.AuditoryTrial(a)
-        % RMM 16.05.23
-        BpodSystem.Data.Custom.EffectiveAlpha = TaskParameters.GUI.AuditoryAlpha/4; % 'divided by 4' comes from the line below.
-        % RMM
-        BpodSystem.Data.Custom.AuditoryOmega(a) = betarnd(TaskParameters.GUI.AuditoryAlpha/4,TaskParameters.GUI.AuditoryAlpha/4,1,1);
-        BpodSystem.Data.Custom.LeftClickRate(a) = round(BpodSystem.Data.Custom.AuditoryOmega(a)*TaskParameters.GUI.SumRates);
-        BpodSystem.Data.Custom.RightClickRate(a) = round((1-BpodSystem.Data.Custom.AuditoryOmega(a))*TaskParameters.GUI.SumRates);
-        BpodSystem.Data.Custom.LeftClickTrain{a} = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(a), TaskParameters.GUI.AuditoryStimulusTime);
-        BpodSystem.Data.Custom.RightClickTrain{a} = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(a), TaskParameters.GUI.AuditoryStimulusTime);
-        %correct left/right click train
-        if ~isempty(BpodSystem.Data.Custom.LeftClickTrain{a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{a})
-            BpodSystem.Data.Custom.LeftClickTrain{a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{a}(1),BpodSystem.Data.Custom.RightClickTrain{a}(1));
-            BpodSystem.Data.Custom.RightClickTrain{a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{a}(1),BpodSystem.Data.Custom.RightClickTrain{a}(1));
-        elseif  isempty(BpodSystem.Data.Custom.LeftClickTrain{a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{a})
-            BpodSystem.Data.Custom.LeftClickTrain{a}(1) = BpodSystem.Data.Custom.RightClickTrain{a}(1);
-        elseif ~isempty(BpodSystem.Data.Custom.LeftClickTrain{1}) &&  isempty(BpodSystem.Data.Custom.RightClickTrain{a})
-            BpodSystem.Data.Custom.RightClickTrain{a}(1) = BpodSystem.Data.Custom.LeftClickTrain{a}(1);
-        else
-            BpodSystem.Data.Custom.LeftClickTrain{a} = round(1/BpodSystem.Data.Custom.LeftClickRate*10000)/10000;
-            BpodSystem.Data.Custom.RightClickTrain{a} = round(1/BpodSystem.Data.Custom.RightClickRate*10000)/10000;
-        end
-        if length(BpodSystem.Data.Custom.LeftClickTrain{a}) > length(BpodSystem.Data.Custom.RightClickTrain{a})
-            BpodSystem.Data.Custom.MoreLeftClicks(a) = double(1);
-        elseif length(BpodSystem.Data.Custom.LeftClickTrain{1}) < length(BpodSystem.Data.Custom.RightClickTrain{a})
-            BpodSystem.Data.Custom.MoreLeftClicks(a) = double(0);
-        else
-            BpodSystem.Data.Custom.MoreLeftClicks(a) = NaN;
-        end
+    % RMM 16.05.23
+    BpodSystem.Data.Custom.EffectiveAlpha = TaskParameters.GUI.AuditoryAlpha/4; % 'divided by 4' comes from the line below.
+    % RMM
+    BpodSystem.Data.Custom.AuditoryOmega(a) = betarnd(TaskParameters.GUI.AuditoryAlpha/4,TaskParameters.GUI.AuditoryAlpha/4,1,1);
+    BpodSystem.Data.Custom.LeftClickRate(a) = round(BpodSystem.Data.Custom.AuditoryOmega(a)*TaskParameters.GUI.SumRates);
+    BpodSystem.Data.Custom.RightClickRate(a) = round((1-BpodSystem.Data.Custom.AuditoryOmega(a))*TaskParameters.GUI.SumRates);
+    BpodSystem.Data.Custom.LeftClickTrain{a} = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(a), TaskParameters.GUI.AuditoryStimulusTime);
+    BpodSystem.Data.Custom.RightClickTrain{a} = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(a), TaskParameters.GUI.AuditoryStimulusTime);
+    %correct left/right click train
+    if ~isempty(BpodSystem.Data.Custom.LeftClickTrain{a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{a})
+        BpodSystem.Data.Custom.LeftClickTrain{a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{a}(1),BpodSystem.Data.Custom.RightClickTrain{a}(1));
+        BpodSystem.Data.Custom.RightClickTrain{a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{a}(1),BpodSystem.Data.Custom.RightClickTrain{a}(1));
+    elseif  isempty(BpodSystem.Data.Custom.LeftClickTrain{a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{a})
+        BpodSystem.Data.Custom.LeftClickTrain{a}(1) = BpodSystem.Data.Custom.RightClickTrain{a}(1);
+    elseif ~isempty(BpodSystem.Data.Custom.LeftClickTrain{1}) &&  isempty(BpodSystem.Data.Custom.RightClickTrain{a})
+        BpodSystem.Data.Custom.RightClickTrain{a}(1) = BpodSystem.Data.Custom.LeftClickTrain{a}(1);
     else
-        BpodSystem.Data.Custom.AuditoryOmega(a) = NaN;
-        BpodSystem.Data.Custom.LeftClickRate(a) = NaN;
-        BpodSystem.Data.Custom.RightClickRate(a) = NaN;
-        BpodSystem.Data.Custom.LeftClickTrain{a} = [];
-        BpodSystem.Data.Custom.RightClickTrain{a} = [];
+        BpodSystem.Data.Custom.LeftClickTrain{a} = round(1/BpodSystem.Data.Custom.LeftClickRate*10000)/10000;
+        BpodSystem.Data.Custom.RightClickTrain{a} = round(1/BpodSystem.Data.Custom.RightClickRate*10000)/10000;
     end
-    
-    if BpodSystem.Data.Custom.AuditoryTrial(a)
-        BpodSystem.Data.Custom.DV(a) = (length(BpodSystem.Data.Custom.LeftClickTrain{a}) - length(BpodSystem.Data.Custom.RightClickTrain{a}))./(length(BpodSystem.Data.Custom.LeftClickTrain{a}) + length(BpodSystem.Data.Custom.RightClickTrain{a}));
-        BpodSystem.Data.Custom.OdorFracA(a) = NaN;
-        BpodSystem.Data.Custom.OdorID(a) = NaN;
-        BpodSystem.Data.Custom.OdorPair(a) = NaN;
+    if length(BpodSystem.Data.Custom.LeftClickTrain{a}) > length(BpodSystem.Data.Custom.RightClickTrain{a})
+        BpodSystem.Data.Custom.MoreLeftClicks(a) = double(1);
+    elseif length(BpodSystem.Data.Custom.LeftClickTrain{1}) < length(BpodSystem.Data.Custom.RightClickTrain{a})
+        BpodSystem.Data.Custom.MoreLeftClicks(a) = double(0);
     else
-        BpodSystem.Data.Custom.DV(a) = (2*BpodSystem.Data.Custom.OdorFracA(a)-100)/100;
+        BpodSystem.Data.Custom.MoreLeftClicks(a) = NaN;
     end
+    BpodSystem.Data.Custom.DV(a) = (length(BpodSystem.Data.Custom.LeftClickTrain{a}) - length(BpodSystem.Data.Custom.RightClickTrain{a}))./(length(BpodSystem.Data.Custom.LeftClickTrain{a}) + length(BpodSystem.Data.Custom.RightClickTrain{a}));
 end%for a+1:2
 
 BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
@@ -201,7 +191,11 @@ BpodSystem.Data.Custom.Rig = getenv('computername');
 BpodSystem.Data.Custom.Subject = BpodSystem.GUIData.SubjectName;
 %% Configuring PulsePal
 
-PulsePal % Added PMA 20-07-2021 % Code to intialise the PulsePal seems to be missing?
+% Added PMA 20-07-2021 % Code to intialise the PulsePal seems to be missing?
+global PulsePalSystem
+if isempty(PulsePalSystem)
+    PulsePal 
+end   
 
 load PulsePalParamStimulus.mat
 load PulsePalParamFeedback.mat
@@ -209,16 +203,15 @@ BpodSystem.Data.Custom.PulsePalParamStimulus=PulsePalParamStimulus;
 BpodSystem.Data.Custom.PulsePalParamFeedback=PulsePalParamFeedback;
 clear PulsePalParamFeedback PulsePalParamStimulus
 if ~BpodSystem.EmulatorMode
-    if BpodSystem.Data.Custom.AuditoryTrial(1)
-        ProgramPulsePal(BpodSystem.Data.Custom.PulsePalParamStimulus);
-        SendCustomPulseTrain(1, BpodSystem.Data.Custom.RightClickTrain{1}, ones(1,length(BpodSystem.Data.Custom.RightClickTrain{1}))*5);
-        SendCustomPulseTrain(2, BpodSystem.Data.Custom.LeftClickTrain{1}, ones(1,length(BpodSystem.Data.Custom.LeftClickTrain{1}))*5);
-    end
+    ProgramPulsePal(BpodSystem.Data.Custom.PulsePalParamStimulus);
+    SendCustomPulseTrain(1, BpodSystem.Data.Custom.RightClickTrain{1}, ones(1,length(BpodSystem.Data.Custom.RightClickTrain{1}))*5);
+    SendCustomPulseTrain(2, BpodSystem.Data.Custom.LeftClickTrain{1}, ones(1,length(BpodSystem.Data.Custom.LeftClickTrain{1}))*5);
 end
 
 %% Initialize plots
 BpodSystem.ProtocolFigures.SideOutcomePlotFig = figure('Position', TaskParameters.Figures.OutcomePlot.Position,'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
-BpodSystem.GUIHandles.OutcomePlot.HandleOutcome = axes('Position',    [  .055          .15 .91 .3]);
+BpodSystem.GUIHandles.OutcomePlot.HandleOutcome = axes('Position',    [  .055          .15 .81 .3]);
+BpodSystem.GUIHandles.OutcomePlot.TextPanel     = axes('Position',    [  .87          .15 .10 .3]);
 BpodSystem.GUIHandles.OutcomePlot.HandlePsycAud = axes('Position',    [2*.05 + 1*.08   .6  .1  .3], 'Visible', 'off');
 BpodSystem.GUIHandles.OutcomePlot.HandleTrialRate = axes('Position',  [3*.05 + 2*.08   .6  .1  .3], 'Visible', 'off');
 BpodSystem.GUIHandles.OutcomePlot.HandleFix = axes('Position',        [4*.05 + 3*.08   .6  .1  .3], 'Visible', 'off');
@@ -229,8 +222,17 @@ MainPlot(BpodSystem.GUIHandles.OutcomePlot,'init');
 BpodSystem.ProtocolFigures.ParameterGUI.Position = TaskParameters.Figures.ParameterGUI.Position;
 %BpodNotebook('init');
 
-%% Main loop
+%% Arduino controller activation
+
+% Make the arduino controlling cameras etc. start here
+BpodSystem.PluginObjects.SerialConnection = connectTimerArduino;
+pause(2); % Need to wait for the connection to actually go live
+write(BpodSystem.PluginObjects.SerialConnection,'A','STRING'); %  'A' means run all (cam & barcodes)
+pause(0.5);
 RunSession = true;
+
+%% Main loop
+
 iTrial = 1;
 
 while RunSession
@@ -258,6 +260,11 @@ while RunSession
     iTrial = iTrial + 1;
 
 end
+
+% Stop the timing arduino
+write(serialCon,'S','STRING');
+
+
 end
 
 function [RawEvents] = try_RunStateMatrix()
@@ -270,3 +277,18 @@ catch
 end % End try
 
 end % End try_RunStateMatrix
+
+
+function serialCon = connectTimerArduino
+    try
+        port = findArduinoPort;
+    catch
+        warning('Couldn''t automatically find timing Arduino. Using a default port. Check timing TTLS are running!!!!');
+        port = 'COM11';
+    end
+    try
+        serialCon =  serialport(port,9600);
+    catch
+        error('failed to connect to timing arduino...');
+    end
+end

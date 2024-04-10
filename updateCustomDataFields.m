@@ -120,19 +120,20 @@ TaskParameters.GUI.StimDelay  = TruncatedExponential(TaskParameters.GUI.StimDela
 if TaskParameters.GUI.MinSampleAudAutoincrement 
     History = 50;
     Crit = 0.8;
-    if sum(BpodSystem.Data.Custom.AuditoryTrial)<10
+    if length(BpodSystem.Data.Custom.ChoiceLeft)<10
         ConsiderTrials = iTrial;
     else
-        idxStart = find(cumsum(BpodSystem.Data.Custom.AuditoryTrial(iTrial:-1:1))>=History,1,'first');
-        if isempty(idxStart)
+        idxStart = iTrial - History + 1;
+        if idxStart < 1
             ConsiderTrials = 1:iTrial;
         else
-            ConsiderTrials = iTrial-idxStart+1:iTrial;
+            ConsiderTrials = idxStart:iTrial;
         end
     end
+
     ConsiderTrials = ConsiderTrials((~isnan(BpodSystem.Data.Custom.ChoiceLeft(ConsiderTrials))...
-                    |BpodSystem.Data.Custom.EarlyWithdrawal(ConsiderTrials))&BpodSystem.Data.Custom.AuditoryTrial(ConsiderTrials)); %choice + early withdrawal + auditory trials
-    if ~isempty(ConsiderTrials) && BpodSystem.Data.Custom.AuditoryTrial(iTrial)
+                    |BpodSystem.Data.Custom.EarlyWithdrawal(ConsiderTrials))); %choice + early withdrawal + auditory trials
+    if ~isempty(ConsiderTrials)
         if mean(BpodSystem.Data.Custom.ST(ConsiderTrials)>TaskParameters.GUI.MinSampleAud) > Crit
             if ~BpodSystem.Data.Custom.EarlyWithdrawal(iTrial)
                 TaskParameters.GUI.MinSampleAud = min(TaskParameters.GUI.MinSampleAudMax,...
@@ -288,21 +289,14 @@ end
 if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
     
     lastidx = numel(BpodSystem.Data.Custom.DV);
-    newAuditoryTrial = rand(1,5) < TaskParameters.GUI.PercentAuditory;
-    BpodSystem.Data.Custom.AuditoryTrial = [BpodSystem.Data.Custom.AuditoryTrial,newAuditoryTrial];
     
     switch TaskParameters.GUIMeta.TrialSelection.String{TaskParameters.GUI.TrialSelection}
         case 'Flat'
             TaskParameters.GUI.LeftBiasAud = 0.5;
         case 'Manual'
-            
-        case 'Competitive'
-            TaskParameters.GUI.LeftBiasAud = 0.5;%auditory not implemented
         case 'BiasCorrecting' % Favors side with fewer rewards. Contrast drawn flat & independently.
-            %olfactory
             %auditory
-            ndxRewd = BpodSystem.Data.Custom.Rewarded(1:iTrial) == 1 &...
-                BpodSystem.Data.Custom.AuditoryTrial(1:iTrial);
+            ndxRewd = BpodSystem.Data.Custom.Rewarded(1:iTrial) == 1;
             if sum(ndxRewd)>10
                 TaskParameters.GUI.LeftBiasAud = sum(BpodSystem.Data.Custom.MoreLeftClicks(1:iTrial)==1&ndxRewd) / sum(ndxRewd);
             else
@@ -322,81 +316,55 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
     BetaA =  (2*AuditoryAlpha*BetaRatio) / (1+BetaRatio); %make a,b symmetric around AuditoryAlpha to make B symmetric
     BetaB = (AuditoryAlpha-BetaA) + AuditoryAlpha;
     for a = 1:5
-        if BpodSystem.Data.Custom.AuditoryTrial(lastidx+a)
-            if rand(1,1) < TaskParameters.GUI.Percent50Fifty && iTrial > TaskParameters.GUI.StartEasyTrials
-                BpodSystem.Data.Custom.AuditoryOmega(lastidx+a) = 0.5;
-            else
-                BpodSystem.Data.Custom.AuditoryOmega(lastidx+a) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
-            end
-            % RMM 16.05.23 - Adding a new field to record the effective
-            %alpha (which depends on the StartEasyTrial)
-            BpodSystem.Data.Custom.EffectiveAlpha(lastidx+a) = AuditoryAlpha;
-            % RMM
-            BpodSystem.Data.Custom.LeftClickRate(lastidx+a) = round(BpodSystem.Data.Custom.AuditoryOmega(lastidx+a).*TaskParameters.GUI.SumRates); 
-            BpodSystem.Data.Custom.RightClickRate(lastidx+a) = round((1-BpodSystem.Data.Custom.AuditoryOmega(lastidx+a)).*TaskParameters.GUI.SumRates);
-            BpodSystem.Data.Custom.LeftClickTrain{lastidx+a} = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(lastidx+a), TaskParameters.GUI.AuditoryStimulusTime);
-            BpodSystem.Data.Custom.RightClickTrain{lastidx+a} = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(lastidx+a), TaskParameters.GUI.AuditoryStimulusTime);
-            %correct left/right click train
-            if ~isempty(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{lastidx+a})
-                BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}(1),BpodSystem.Data.Custom.RightClickTrain{lastidx+a}(1));
-                BpodSystem.Data.Custom.RightClickTrain{lastidx+a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}(1),BpodSystem.Data.Custom.RightClickTrain{lastidx+a}(1));
-            elseif  isempty(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{lastidx+a})
-                BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}(1) = BpodSystem.Data.Custom.RightClickTrain{lastidx+a}(1);
-            elseif ~isempty(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) &&  isempty(BpodSystem.Data.Custom.RightClickTrain{lastidx+a})
-                BpodSystem.Data.Custom.RightClickTrain{lastidx+a}(1) = BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}(1);
-            else
-                BpodSystem.Data.Custom.LeftClickTrain{lastidx+a} = round(1/BpodSystem.Data.Custom.LeftClickRate*10000)/10000;
-                BpodSystem.Data.Custom.RightClickTrain{lastidx+a} = round(1/BpodSystem.Data.Custom.RightClickRate*10000)/10000;
-            end
-            if length(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) > length(BpodSystem.Data.Custom.RightClickTrain{lastidx+a})
-                BpodSystem.Data.Custom.MoreLeftClicks(lastidx+a) = 1;
-            elseif length(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) < length(BpodSystem.Data.Custom.RightClickTrain{lastidx+a})
-                BpodSystem.Data.Custom.MoreLeftClicks(lastidx+a) = 0;
-            else
-                BpodSystem.Data.Custom.MoreLeftClicks(lastidx+a) = NaN;
-            end
+        if rand(1,1) < TaskParameters.GUI.Percent50Fifty && iTrial > TaskParameters.GUI.StartEasyTrials
+            BpodSystem.Data.Custom.AuditoryOmega(lastidx+a) = 0.5;
         else
-            BpodSystem.Data.Custom.AuditoryOmega(lastidx+a) = NaN;
-            BpodSystem.Data.Custom.LeftClickRate(lastidx+a) = NaN;
-            BpodSystem.Data.Custom.RightClickRate(lastidx+a) = NaN;
+            BpodSystem.Data.Custom.AuditoryOmega(lastidx+a) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
+        end
+        % RMM 16.05.23 - Adding a new field to record the effective
+        %alpha (which depends on the StartEasyTrial)
+        BpodSystem.Data.Custom.EffectiveAlpha(lastidx+a) = AuditoryAlpha;
+        % RMM
+        BpodSystem.Data.Custom.LeftClickRate(lastidx+a) = round(BpodSystem.Data.Custom.AuditoryOmega(lastidx+a).*TaskParameters.GUI.SumRates); 
+        BpodSystem.Data.Custom.RightClickRate(lastidx+a) = round((1-BpodSystem.Data.Custom.AuditoryOmega(lastidx+a)).*TaskParameters.GUI.SumRates);
+        BpodSystem.Data.Custom.LeftClickTrain{lastidx+a} = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(lastidx+a), TaskParameters.GUI.AuditoryStimulusTime);
+        BpodSystem.Data.Custom.RightClickTrain{lastidx+a} = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(lastidx+a), TaskParameters.GUI.AuditoryStimulusTime);
+        %correct left/right click train
+        if ~isempty(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{lastidx+a})
+            BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}(1),BpodSystem.Data.Custom.RightClickTrain{lastidx+a}(1));
+            BpodSystem.Data.Custom.RightClickTrain{lastidx+a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}(1),BpodSystem.Data.Custom.RightClickTrain{lastidx+a}(1));
+        elseif  isempty(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{lastidx+a})
+            BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}(1) = BpodSystem.Data.Custom.RightClickTrain{lastidx+a}(1);
+        elseif ~isempty(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) &&  isempty(BpodSystem.Data.Custom.RightClickTrain{lastidx+a})
+            BpodSystem.Data.Custom.RightClickTrain{lastidx+a}(1) = BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}(1);
+        else
+            BpodSystem.Data.Custom.LeftClickTrain{lastidx+a} = round(1/BpodSystem.Data.Custom.LeftClickRate*10000)/10000;
+            BpodSystem.Data.Custom.RightClickTrain{lastidx+a} = round(1/BpodSystem.Data.Custom.RightClickRate*10000)/10000;
+        end
+        if length(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) > length(BpodSystem.Data.Custom.RightClickTrain{lastidx+a})
+            BpodSystem.Data.Custom.MoreLeftClicks(lastidx+a) = 1;
+        elseif length(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) < length(BpodSystem.Data.Custom.RightClickTrain{lastidx+a})
+            BpodSystem.Data.Custom.MoreLeftClicks(lastidx+a) = 0;
+        else
             BpodSystem.Data.Custom.MoreLeftClicks(lastidx+a) = NaN;
-            BpodSystem.Data.Custom.LeftClickTrain{lastidx+a} = [];
-            BpodSystem.Data.Custom.RightClickTrain{lastidx+a} = [];
-        end%if auditory
+        end
     end%for a=1:5
     
     % cross-modality difficulty for plotting
-    for a = 1 : 5
-        if BpodSystem.Data.Custom.AuditoryTrial(lastidx+a)
-            BpodSystem.Data.Custom.DV(lastidx+a) = (length(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) - length(BpodSystem.Data.Custom.RightClickTrain{lastidx+a}))./(length(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) + length(BpodSystem.Data.Custom.RightClickTrain{lastidx+a}));
-        else
-            BpodSystem.Data.Custom.DV(lastidx+a) = (2*BpodSystem.Data.Custom.OdorFracA(lastidx+a)-100)/100;
-        end
+    for a = 1 : 5       
+        BpodSystem.Data.Custom.DV(lastidx+a) = (length(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) - length(BpodSystem.Data.Custom.RightClickTrain{lastidx+a}))./(length(BpodSystem.Data.Custom.LeftClickTrain{lastidx+a}) + length(BpodSystem.Data.Custom.RightClickTrain{lastidx+a}));
     end
     
 end%if trial > - 5
 
 % send auditory stimuli to PulsePal for next trial
 if ~BpodSystem.EmulatorMode
-    if BpodSystem.Data.Custom.AuditoryTrial(iTrial+1)
-        SendCustomPulseTrain(1, BpodSystem.Data.Custom.RightClickTrain{iTrial+1}, ones(1,length(BpodSystem.Data.Custom.RightClickTrain{iTrial+1}))*5);
-        SendCustomPulseTrain(2, BpodSystem.Data.Custom.LeftClickTrain{iTrial+1}, ones(1,length(BpodSystem.Data.Custom.LeftClickTrain{iTrial+1}))*5);
-    end
+    SendCustomPulseTrain(1, BpodSystem.Data.Custom.RightClickTrain{iTrial+1}, ones(1,length(BpodSystem.Data.Custom.RightClickTrain{iTrial+1}))*5);
+    SendCustomPulseTrain(2, BpodSystem.Data.Custom.LeftClickTrain{iTrial+1}, ones(1,length(BpodSystem.Data.Custom.LeftClickTrain{iTrial+1}))*5);
 end
 
 %%update hidden TaskParameter fields
 TaskParameters.Figures.OutcomePlot.Position = BpodSystem.ProtocolFigures.SideOutcomePlotFig.Position;
 TaskParameters.Figures.ParameterGUI.Position = BpodSystem.ProtocolFigures.ParameterGUI.Position;
-
-%send bpod status to server
-try
-script = 'receivebpodstatus.php';
-%create a common "outcome" vector
-outcome = BpodSystem.Data.Custom.ChoiceCorrect(1:iTrial); %1=correct, 0=wrong
-outcome(BpodSystem.Data.Custom.EarlyWithdrawal(1:iTrial))=2; %early withdrawal=2
-outcome(BpodSystem.Data.Custom.FixBroke(1:iTrial))=3;%jackpot=3
-SendTrialStatusToServer(script,BpodSystem.Data.Custom.Rig,outcome,BpodSystem.Data.Custom.Subject,BpodSystem.CurrentProtocolName);
-catch
-end
 
 end
