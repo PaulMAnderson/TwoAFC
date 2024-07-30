@@ -16,7 +16,7 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.TimeOutIncorrectChoice = 3; % (s)
     TaskParameters.GUI.TimeOutBrokeFixation = 5; % (s)
     TaskParameters.GUI.TimeOutEarlyWithdrawal = 5; % (s)
-    TaskParameters.GUI.TimeOutSkippedFeedback = 3; % (s)
+    TaskParameters.GUI.TimeOutSkippedFeedback = 3; % (s) 
     TaskParameters.GUI.StartEasyTrials = 75;
     TaskParameters.GUI.Percent50Fifty = 0;
     TaskParameters.GUI.PercentCatch = 0;
@@ -194,7 +194,9 @@ BpodSystem.Data.Custom.Subject = BpodSystem.GUIData.SubjectName;
 % Added PMA 20-07-2021 % Code to intialise the PulsePal seems to be missing?
 global PulsePalSystem
 if isempty(PulsePalSystem)
-    PulsePal 
+    try
+        PulsePal 
+    end
 end   
 
 load PulsePalParamStimulus.mat
