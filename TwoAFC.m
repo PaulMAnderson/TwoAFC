@@ -122,7 +122,7 @@ if isempty(fieldnames(TaskParameters))
     % Is an attempt to allow Bpod to control external equipment upon
     % protocol end (in the inital case it should send a serial command to
     % an Arduino)
-    TaskParameters.CloseFunction = @stopSyncArduino;
+    % TaskParameters.CloseFunction = @stopSyncArduino;
 
 
 end
@@ -225,14 +225,17 @@ BpodSystem.ProtocolFigures.ParameterGUI.Position = TaskParameters.Figures.Parame
 
 %% Arduino controller activation
 
-computerName = getenv('COMPUTERNAME');
-if strcmp(computerName,'CIRCE')
+% computerName = getenv('COMPUTERNAME');
+% if strcmp(computerName,'CIRCE')
     % Make the arduino controlling cameras etc. start here
     % BpodSystem.PluginObjects.SerialConnection = connectTimerArduino;
     % pause(2); % Need to wait for the connection to actually go live
     % write(BpodSystem.PluginObjects.SerialConnection,'A','STRING'); %  'A' means run all (cam & barcodes)
     % pause(0.5);
-end
+% end
+
+%%
+
 RunSession = true;
 
 %% Main loop
@@ -266,7 +269,7 @@ while RunSession
 end
 
 % Stop the timing arduino
-write(serialCon,'S','STRING');
+% write(serialCon,'S','STRING');
 
 
 end
