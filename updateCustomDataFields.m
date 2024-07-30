@@ -158,7 +158,7 @@ end
 
 %% Reward delay
 switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.RewardDelaySelection}
-    case 'AutoIncr'
+    case 'AutoIncrease'
         % Activate Increment and target fields
         handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMin') | ...
                           strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTau') | ...     
@@ -207,7 +207,7 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
              TaskParameters.GUI.RewardDelay = TruncatedExponential(TaskParameters.GUI.RewardDelayMin,...
                 TaskParameters.GUI.RewardDelayMax,TaskParameters.GUI.RewardDelayTau);
         end
-    case 'TruncExp'
+    case 'TruncatedExp'
         %     ATTEMPT TO GRAY OUT FIELDS
         % Activate Increment and target fields
         handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMinTarget') | ...
