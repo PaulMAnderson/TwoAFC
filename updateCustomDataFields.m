@@ -5,8 +5,8 @@ global TaskParameters
 %% Standard values
 BpodSystem.Data.Custom.ChoiceLeft(iTrial) = NaN;
 BpodSystem.Data.Custom.ChoiceCorrect(iTrial) = NaN;
-BpodSystem.Data.Custom.Feedback(iTrial) = true;
-BpodSystem.Data.Custom.FeedbackTime(iTrial) = NaN;
+BpodSystem.Data.Custom.Reward(iTrial) = true;
+BpodSystem.Data.Custom.RewardTime(iTrial) = NaN;
 BpodSystem.Data.Custom.FixBroke(iTrial) = false;
 BpodSystem.Data.Custom.EarlyWithdrawal(iTrial) = false;
 BpodSystem.Data.Custom.FixDur(iTrial) = NaN;
@@ -42,14 +42,14 @@ end
 if any(strcmp('rewarded_Lin',statesThisTrial))
     BpodSystem.Data.Custom.ChoiceLeft(iTrial) = 1;
     BpodSystem.Data.Custom.ChoiceCorrect(iTrial) = 1;
-    FeedbackPortTimes = BpodSystem.Data.RawEvents.Trial{end}.States.rewarded_Lin;
-    BpodSystem.Data.Custom.FeedbackTime(iTrial) = FeedbackPortTimes(end,end)-FeedbackPortTimes(1,1);
+    RewardPortTimes = BpodSystem.Data.RawEvents.Trial{end}.States.rewarded_Lin;
+    BpodSystem.Data.Custom.RewardTime(iTrial) = RewardPortTimes(end,end)-RewardPortTimes(1,1);
     % RMM 17.05.23 - Previous to this date, time spent on the port after
     % receiving reward was not being saved in SessionData (but it can be
     % retrieved from the spike2 file)
     if any(strcmp('lingersInPort_L',statesThisTrial))
-        FeedbackPortLingerTimes = BpodSystem.Data.RawEvents.Trial{end}.States.rewarded_Lin;
-        BpodSystem.Data.Custom.timeLingersInPort(iTrial) = FeedbackPortLingerTimes(end,end)-FeedbackPortLingerTimes(1,1);
+        RewardPortLingerTimes = BpodSystem.Data.RawEvents.Trial{end}.States.rewarded_Lin;
+        BpodSystem.Data.Custom.timeLingersInPort(iTrial) = RewardPortLingerTimes(end,end)-RewardPortLingerTimes(1,1);
     else
         BpodSystem.Data.Custom.timeLingersInPort(iTrial) = nan;
     end
@@ -57,14 +57,14 @@ if any(strcmp('rewarded_Lin',statesThisTrial))
 elseif any(strcmp('rewarded_Rin',statesThisTrial))
     BpodSystem.Data.Custom.ChoiceLeft(iTrial) = 0;
     BpodSystem.Data.Custom.ChoiceCorrect(iTrial) = 1;
-    FeedbackPortTimes = BpodSystem.Data.RawEvents.Trial{end}.States.rewarded_Rin;
-    BpodSystem.Data.Custom.FeedbackTime(iTrial) = FeedbackPortTimes(end,end)-FeedbackPortTimes(1,1);
+    RewardPortTimes = BpodSystem.Data.RawEvents.Trial{end}.States.rewarded_Rin;
+    BpodSystem.Data.Custom.RewardTime(iTrial) = RewardPortTimes(end,end)-RewardPortTimes(1,1);
     % RMM 17.05.23 - Previous to this date, time spent on the port after
     % receiving reward was not being saved in SessionData (but it can be
     % retrieved from the spike2 file)
     if any(strcmp('lingersInPort_R',statesThisTrial))
-        FeedbackPortLingerTimes = BpodSystem.Data.RawEvents.Trial{end}.States.rewarded_Rin;
-        BpodSystem.Data.Custom.timeLingersInPort(iTrial) = FeedbackPortLingerTimes(end,end)-FeedbackPortLingerTimes(1,1);
+        RewardPortLingerTimes = BpodSystem.Data.RawEvents.Trial{end}.States.rewarded_Rin;
+        BpodSystem.Data.Custom.timeLingersInPort(iTrial) = RewardPortLingerTimes(end,end)-RewardPortLingerTimes(1,1);
     else
         BpodSystem.Data.Custom.timeLingersInPort(iTrial) = nan;
     end
@@ -72,13 +72,13 @@ elseif any(strcmp('rewarded_Rin',statesThisTrial))
 elseif any(strcmp('unrewarded_Lin',statesThisTrial))
     BpodSystem.Data.Custom.ChoiceLeft(iTrial) = 1;
     BpodSystem.Data.Custom.ChoiceCorrect(iTrial) = 0;
-    FeedbackPortTimes = BpodSystem.Data.RawEvents.Trial{end}.States.unrewarded_Lin;
-    BpodSystem.Data.Custom.FeedbackTime(iTrial) = FeedbackPortTimes(end,end)-FeedbackPortTimes(1,1);
+    RewardPortTimes = BpodSystem.Data.RawEvents.Trial{end}.States.unrewarded_Lin;
+    BpodSystem.Data.Custom.RewardTime(iTrial) = RewardPortTimes(end,end)-RewardPortTimes(1,1);
 elseif any(strcmp('unrewarded_Rin',statesThisTrial))
     BpodSystem.Data.Custom.ChoiceLeft(iTrial) = 0;
     BpodSystem.Data.Custom.ChoiceCorrect(iTrial) = 0;
-    FeedbackPortTimes = BpodSystem.Data.RawEvents.Trial{end}.States.unrewarded_Rin;
-    BpodSystem.Data.Custom.FeedbackTime(iTrial) = FeedbackPortTimes(end,end)-FeedbackPortTimes(1,1);
+    RewardPortTimes = BpodSystem.Data.RawEvents.Trial{end}.States.unrewarded_Rin;
+    BpodSystem.Data.Custom.RewardTime(iTrial) = RewardPortTimes(end,end)-RewardPortTimes(1,1);
 elseif any(strcmp('broke_fixation',statesThisTrial))
     BpodSystem.Data.Custom.FixBroke(iTrial) = true;
 elseif any(strcmp('early_withdrawal',statesThisTrial))
@@ -87,15 +87,15 @@ end
 
 % RMM
 if any(strcmp('skipped_feedbackCorrectChoice',statesThisTrial))
-    BpodSystem.Data.Custom.Feedback(iTrial) = false;
+    BpodSystem.Data.Custom.Reward(iTrial) = false;
 end
 % RMM
 
 if any(strcmp('missed_choice',statesThisTrial))
-    BpodSystem.Data.Custom.Feedback(iTrial) = false;
+    BpodSystem.Data.Custom.Reward(iTrial) = false;
 end
-if any(strcmp('skipped_feedback',statesThisTrial))
-    BpodSystem.Data.Custom.Feedback(iTrial) = false;
+if any(strcmp('skipped_reward',statesThisTrial))
+    BpodSystem.Data.Custom.Reward(iTrial) = false;
 end
 if any(strncmp('water_',statesThisTrial,6))
     BpodSystem.Data.Custom.Rewarded(iTrial) = true;
@@ -103,7 +103,7 @@ end
 
 %% State-independent fields
 BpodSystem.Data.Custom.StimDelay(iTrial) = TaskParameters.GUI.StimDelay;
-BpodSystem.Data.Custom.FeedbackDelay(iTrial) = TaskParameters.GUI.FeedbackDelay;
+BpodSystem.Data.Custom.RewardDelay(iTrial) = TaskParameters.GUI.RewardDelay;
 BpodSystem.Data.Custom.MinSampleAud(iTrial) = TaskParameters.GUI.MinSampleAud;
 
 BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,1) = TaskParameters.GUI.RewardAmountL;
@@ -156,93 +156,93 @@ else
     TaskParameters.GUI.MinSampleAud = TaskParameters.GUI.MinSampleAudMin;
 end
 
-%feedback delay
-switch TaskParameters.GUIMeta.FeedbackDelaySelection.String{TaskParameters.GUI.FeedbackDelaySelection}
+%% Reward delay
+switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.RewardDelaySelection}
     case 'AutoIncr'
         % Activate Increment and target fields
-        handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMin') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayTau') | ...     
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMinTarget') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayTauTarget') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMaxTarget') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayIncrMinTau') | ...    
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayIncrMax') );
+        handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMin') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTau') | ...     
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMinTarget') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTauTarget') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMaxTarget') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayIncrMinTau') | ...    
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayIncrMax') );
         for hI = 1:length(handleIdx)
-            BpodSystem.GUIHandles.ParameterGUI.Params{handleIdx(hI)}.Enable = 'on';
+            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx(hI)).Enable = 'on';
         end
 
-        if ~BpodSystem.Data.Custom.Feedback(iTrial) % If animal dropped out, do not increase
-            TaskParameters.GUI.FeedbackDelay = TruncatedExponential(TaskParameters.GUI.FeedbackDelayMin,...
-                TaskParameters.GUI.FeedbackDelayMax,TaskParameters.GUI.FeedbackDelayTau);
+        if ~BpodSystem.Data.Custom.Reward(iTrial) % If animal dropped out, do not increase
+            TaskParameters.GUI.RewardDelay = TruncatedExponential(TaskParameters.GUI.RewardDelayMin,...
+                TaskParameters.GUI.RewardDelayMax,TaskParameters.GUI.RewardDelayTau);
         else % Otherwise increase the current set times
-            if TaskParameters.GUI.FeedbackDelayMin < TaskParameters.GUI.FeedbackDelayMinTarget
+            if TaskParameters.GUI.RewardDelayMin < TaskParameters.GUI.RewardDelayMinTarget
                 % Update value
-                TaskParameters.GUI.FeedbackDelayMin = ...
-                    TaskParameters.GUI.FeedbackDelayMin + TaskParameters.GUI.FeedbackDelayIncrMinTau;
+                TaskParameters.GUI.RewardDelayMin = ...
+                    TaskParameters.GUI.RewardDelayMin + TaskParameters.GUI.RewardDelayIncrMinTau;
                 % Update GUI    
-                paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMin');
+                paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMin');
                 paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params{paramIdx};
-                paramHandle.String = num2str(TaskParameters.GUI.FeedbackDelayMin);                
+                paramHandle.String = num2str(TaskParameters.GUI.RewardDelayMin);                
             end
-            if TaskParameters.GUI.FeedbackDelayTau < TaskParameters.GUI.FeedbackDelayTauTarget
-                TaskParameters.GUI.FeedbackDelayTau = ...
-                    TaskParameters.GUI.FeedbackDelayTau + TaskParameters.GUI.FeedbackDelayIncrMinTau;
+            if TaskParameters.GUI.RewardDelayTau < TaskParameters.GUI.RewardDelayTauTarget
+                TaskParameters.GUI.RewardDelayTau = ...
+                    TaskParameters.GUI.RewardDelayTau + TaskParameters.GUI.RewardDelayIncrMinTau;
                 % Update GUI    
-                paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayTau');
+                paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTau');
                 paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params{paramIdx};
-                paramHandle.String = num2str(TaskParameters.GUI.FeedbackDelayTau);    
+                paramHandle.String = num2str(TaskParameters.GUI.RewardDelayTau);    
             end   
-            if TaskParameters.GUI.FeedbackDelayMax < TaskParameters.GUI.FeedbackDelayMaxTarget
-                TaskParameters.GUI.FeedbackDelayMax = ...
-                    TaskParameters.GUI.FeedbackDelayMax + TaskParameters.GUI.FeedbackDelayIncrMax;
-                if TaskParameters.GUI.FeedbackDelayMax == TaskParameters.GUI.FeedbackDelayMin
-                    TaskParameters.GUI.FeedbackDelayMin = TaskParameters.GUI.FeedbackDelayMin - TaskParameters.GUI.FeedbackDelayIncrMinTau;
+            if TaskParameters.GUI.RewardDelayMax < TaskParameters.GUI.RewardDelayMaxTarget
+                TaskParameters.GUI.RewardDelayMax = ...
+                    TaskParameters.GUI.RewardDelayMax + TaskParameters.GUI.RewardDelayIncrMax;
+                if TaskParameters.GUI.RewardDelayMax == TaskParameters.GUI.RewardDelayMin
+                    TaskParameters.GUI.RewardDelayMin = TaskParameters.GUI.RewardDelayMin - TaskParameters.GUI.RewardDelayIncrMinTau;
                 end
                 % Update GUI    
-                paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMax');
+                paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMax');
                 paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params{paramIdx};
-                paramHandle.String = num2str(TaskParameters.GUI.FeedbackDelayMax); 
+                paramHandle.String = num2str(TaskParameters.GUI.RewardDelayMax); 
             end   
-            % And generate a new Feedback Delay value
-             TaskParameters.GUI.FeedbackDelay = TruncatedExponential(TaskParameters.GUI.FeedbackDelayMin,...
-                TaskParameters.GUI.FeedbackDelayMax,TaskParameters.GUI.FeedbackDelayTau);
+            % And generate a new Reward Delay value
+             TaskParameters.GUI.RewardDelay = TruncatedExponential(TaskParameters.GUI.RewardDelayMin,...
+                TaskParameters.GUI.RewardDelayMax,TaskParameters.GUI.RewardDelayTau);
         end
     case 'TruncExp'
         %     ATTEMPT TO GRAY OUT FIELDS
         % Activate Increment and target fields
-        handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMinTarget') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayTauTarget') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMaxTarget') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayIncrMinTau') | ...    
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayIncrMax') );
+        handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMinTarget') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTauTarget') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMaxTarget') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayIncrMinTau') | ...    
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayIncrMax') );
         for hI = 1:length(handleIdx)
-            BpodSystem.GUIHandles.ParameterGUI.Params{handleIdx(hI)}.Enable = 'off';
+            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx(hI)).Enable = 'off';
         end
         
-        handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMin') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayTau') );
+        handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMin') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTau') );
         for hI = 1:length(handleIdx)
-            BpodSystem.GUIHandles.ParameterGUI.Params{handleIdx(hI)}.Enable = 'on';
+            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx(hI)).Enable = 'on';
         end
         
-            TaskParameters.GUI.FeedbackDelay = TruncatedExponential(TaskParameters.GUI.FeedbackDelayMin,...
-                TaskParameters.GUI.FeedbackDelayMax,TaskParameters.GUI.FeedbackDelayTau);
+            TaskParameters.GUI.RewardDelay = TruncatedExponential(TaskParameters.GUI.RewardDelayMin,...
+                TaskParameters.GUI.RewardDelayMax,TaskParameters.GUI.RewardDelayTau);
     case 'Fix'
         %     ATTEMPT TO GRAY OUT FIELDS
         % De-activate Increment and target fields
-        handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMin') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayTau') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMinTarget') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayTauTarget') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayMaxTarget') | ...
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayIncrMinTau') | ...    
-                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FeedbackDelayIncrMax') );
+        handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMin') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTau') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMinTarget') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTauTarget') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayMaxTarget') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayIncrMinTau') | ...    
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayIncrMax') );
                       
         for hI = 1:length(handleIdx)
-            BpodSystem.GUIHandles.ParameterGUI.Params{handleIdx(hI)}.Enable = 'off';
+            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx(hI)).Enable = 'off';
         end
         
-        TaskParameters.GUI.FeedbackDelay = TaskParameters.GUI.FeedbackDelayMax;
+        TaskParameters.GUI.RewardDelay = TaskParameters.GUI.RewardDelayMax;
 end
 
 %% Drawing future trials
@@ -278,12 +278,6 @@ else
     BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;
 end
 
-%set jackpot time
-if TaskParameters.GUI.JackpotAuditory
-    if sum(~isnan(BpodSystem.Data.Custom.ST))>50
-        TaskParameters.GUI.JackpotAuditoryTime = quantile(BpodSystem.Data.Custom.ST,0.95);
-    end
-end
 
 %create future trials
 if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
@@ -291,7 +285,7 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
     lastidx = numel(BpodSystem.Data.Custom.DV);
     
     switch TaskParameters.GUIMeta.TrialSelection.String{TaskParameters.GUI.TrialSelection}
-        case 'Flat'
+        case 'Even'
             TaskParameters.GUI.LeftBiasAud = 0.5;
         case 'Manual'
         case 'BiasCorrecting' % Favors side with fewer rewards. Contrast drawn flat & independently.
@@ -316,7 +310,7 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
     BetaA =  (2*AuditoryAlpha*BetaRatio) / (1+BetaRatio); %make a,b symmetric around AuditoryAlpha to make B symmetric
     BetaB = (AuditoryAlpha-BetaA) + AuditoryAlpha;
     for a = 1:5
-        if rand(1,1) < TaskParameters.GUI.Percent50Fifty && iTrial > TaskParameters.GUI.StartEasyTrials
+        if rand(1,1) < TaskParameters.GUI.Proportion50Fifty && iTrial > TaskParameters.GUI.StartEasyTrials
             BpodSystem.Data.Custom.AuditoryOmega(lastidx+a) = 0.5;
         else
             BpodSystem.Data.Custom.AuditoryOmega(lastidx+a) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
