@@ -12,74 +12,139 @@ TaskParameters = BpodSystem.ProtocolSettings;
 if isempty(fieldnames(TaskParameters))
     %% General
     TaskParameters.GUI.ITI = 0; % (s)
-    TaskParameters.GUI.ChoiceDeadLine = 20;
-    TaskParameters.GUI.TimeOutIncorrectChoice = 3; % (s)
-    TaskParameters.GUI.TimeOutBrokeFixation = 5; % (s)
-    TaskParameters.GUI.TimeOutEarlyWithdrawal = 5; % (s)
-    TaskParameters.GUI.TimeOutSkippedFeedback = 3; % (s)
-    TaskParameters.GUI.StartEasyTrials = 75;
-    TaskParameters.GUI.Percent50Fifty = 0;
-    TaskParameters.GUI.PercentCatch = 0;
-    TaskParameters.GUI.CatchError = true;
-    TaskParameters.GUIMeta.CatchError.Style = 'checkbox';
+    TaskParameters.GUI.TimeToChoose = 20;
+    TaskParameters.GUIMeta.TimeToChoose.Label = 'Time to make choice';
+    TaskParameters.GUI.TimeOutIncorrect = 3; % (s)
+    TaskParameters.GUIMeta.TimeOutIncorrect.Label = 'Timeout for Incorrect';
+    TaskParameters.GUI.TimeOutBrokeFixation = 3; % (s)
+    TaskParameters.GUIMeta.TimeOutBrokeFixation.Label = 'Timeout for Sampling Dropout';
+    TaskParameters.GUI.TimeOutSkippedReward = 0; % (s) 
+    TaskParameters.GUIMeta.TimeOutSkippedReward.Label = 'Timeout for Skipping Reward';
+    TaskParameters.GUI.StartEasyTrials = 50;
+    TaskParameters.GUIMeta.StartEasyTrials.Label = '# Easier Trials at Start';
+    TaskParameters.GUI.Proportion50Fifty = 0;
+    TaskParameters.GUIMeta.Proportion50Fifty.Label = 'Proportion Equal Trials';
+    TaskParameters.GUI.ProportionCatch = 0;
+    TaskParameters.GUIMeta.ProportionCatch.Label = 'Proportion of Catch Trials';
+    TaskParameters.GUI.IndicateError = false;
+    TaskParameters.GUIMeta.IndicateError.Style = 'checkbox';
+    TaskParameters.GUIMeta.IndicateError.Label = 'Indicate Error';
     TaskParameters.GUI.Ports_LMR = 123;
-    TaskParameters.GUIPanels.General = {'ITI','ChoiceDeadLine','TimeOutIncorrectChoice','TimeOutBrokeFixation','TimeOutEarlyWithdrawal','TimeOutSkippedFeedback','StartEasyTrials','Percent50Fifty','PercentCatch','CatchError','Ports_LMR'};    
+    TaskParameters.GUIMeta.Ports_LMR.Label = 'Port Numbers';
+    TaskParameters.GUIPanels.General = {'ITI','TimeToChoose',...
+        'TimeOutIncorrect','TimeOutBrokeFixation','TimeOutSkippedReward', ...
+        'StartEasyTrials','Proportion50Fifty','ProportionCatch', ...
+        'IndicateError','Ports_LMR'};    
     %% BiasControl
     TaskParameters.GUI.TrialSelection = 1;
-    TaskParameters.GUI.RewardAmountL = 12;  
-    TaskParameters.GUI.RewardAmountR = 12; 
     TaskParameters.GUIMeta.TrialSelection.Style = 'popupmenu';
-    TaskParameters.GUIMeta.TrialSelection.String = {'Flat','Manual','BiasCorrecting'};
-    TaskParameters.GUIPanels.BiasControl = {'TrialSelection','RewardAmountL','RewardAmountR'};
+    TaskParameters.GUIMeta.TrialSelection.String = {'Even','Manual','BiasCorrecting'};
+    TaskParameters.GUIMeta.TrialSelection.Label = 'Trial Selection Method';
+    
+    TaskParameters.GUI.DesiredLeftBias = 0.5;
+    TaskParameters.GUIMeta.DesiredLeftBias.Label = 'Desired Left Trial Bias';
+        
+    TaskParameters.GUI.LeftBias = 0.5;
+    TaskParameters.GUIMeta.LeftBias.Style = 'text';
+    TaskParameters.GUIMeta.LeftBias.Label = 'Actual Left Trial Bias';
+
+    TaskParameters.GUI.RewardAmountTable.Left = 12;  
+    TaskParameters.GUI.RewardAmountTable.Right = 12;  
+    TaskParameters.GUIMeta.RewardAmountTable.Style = 'table';
+    TaskParameters.GUIMeta.RewardAmountTable.Label = 'Reward Volumes';
+    TaskParameters.GUIMeta.RewardDelayTable.ColumnLabel = {'Left','Right'};
+    
+    TaskParameters.GUIPanels.BiasControl = {'TrialSelection','LeftBias',...
+        'DesiredLeftBias','RewardAmountTable'};
     %% StimDelay
-    TaskParameters.GUI.StimDelayMin = 0.06;
-    TaskParameters.GUI.StimDelayMax = 0.15;
-    TaskParameters.GUI.StimDelayTau = 0.1;
-    TaskParameters.GUI.StimDelay = TaskParameters.GUI.StimDelayMin;
+    % Stimulus Delay Distribution Parameters
+    TaskParameters.GUI.StimDelayTable.Min = 0.06;
+    TaskParameters.GUI.StimDelayTable.Tau = 0.1;    
+    TaskParameters.GUI.StimDelayTable.Max = 0.1;
+    TaskParameters.GUIMeta.StimDelayTable.Style = 'table';
+    TaskParameters.GUIMeta.StimDelayTable.Label = 'Stimulus Delay Distribution';
+    TaskParameters.GUIMeta.StimDelayTable.ColumnLabel = {'Min','Tau','Max'};
+
+    TaskParameters.GUI.StimDelay = TaskParameters.GUI.StimDelayTable.Min;
     TaskParameters.GUIMeta.StimDelay.Style = 'text';
-    TaskParameters.GUIPanels.StimDelay = {'StimDelayMin','StimDelayMax','StimDelayTau','StimDelay'};
-    %% FeedbackDelay
-    TaskParameters.GUI.FeedbackDelaySelection = 1;
-    TaskParameters.GUIMeta.FeedbackDelaySelection.Style = 'popupmenu';
-    TaskParameters.GUIMeta.FeedbackDelaySelection.String = {'Fix','AutoIncr','TruncExp'};
-    TaskParameters.GUI.FeedbackDelayMin = 0.5;
-    TaskParameters.GUI.FeedbackDelayTau = 0.75;
-    TaskParameters.GUI.FeedbackDelayMax = 1.5;
-    TaskParameters.GUI.FeedbackDelayMinTarget = 1;
-    TaskParameters.GUI.FeedbackDelayTauTarget = 1.5;        
-    TaskParameters.GUI.FeedbackDelayMaxTarget = 6;
-    TaskParameters.GUI.FeedbackDelayIncrMinTau = 0.01;
-    TaskParameters.GUI.FeedbackDelayIncrMax = 0.05;
-    TaskParameters.GUI.FeedbackDelayGrace = 0.3;
-    TaskParameters.GUI.FeedbackDelay = TaskParameters.GUI.FeedbackDelayMin;
-    TaskParameters.GUIMeta.FeedbackDelay.Style = 'text';
-    TaskParameters.GUIPanels.FeedbackDelay = {'FeedbackDelaySelection',...
-        'FeedbackDelayMin','FeedbackDelayTau','FeedbackDelayMax',...
-        'FeedbackDelayMinTarget','FeedbackDelayTauTarget','FeedbackDelayMaxTarget',...        
-        'FeedbackDelayIncrMinTau','FeedbackDelayIncrMax',...
-        'FeedbackDelayGrace','FeedbackDelay'};
+    TaskParameters.GUIMeta.StimDelay.Label = 'Current Stimulus Delay';
+
+    TaskParameters.GUIPanels.StimulusDelay = {'StimDelayTable','StimDelay'};
+
+    % TaskParameters.GUI.StimDelayMin = 0.06;
+    % TaskParameters.GUIMeta.StimDelayMin.Label = 'Minimum Stimulus Delay';
+    % TaskParameters.GUI.StimDelayMax = 0.15;
+    % TaskParameters.GUIMeta.StimDelayMax.Label = 'Maximum Stimulus Delay';
+    % TaskParameters.GUI.StimDelayTau = 0.1;
+    % TaskParameters.GUIMeta.StimDelayTau.Label = 'Tau Stimulus Delay';
+    % TaskParameters.GUI.StimDelay = TaskParameters.GUI.StimDelayMin;
+    % TaskParameters.GUIMeta.StimDelay.Style = 'text';
+    % TaskParameters.GUIMeta.StimDelay.Label = 'Current Stimulus Delay';
+    % TaskParameters.GUIPanels.StimulusDelay = {'StimDelayMin','StimDelayMax','StimDelayTau','StimDelay'};
+    %% RewardDelay
+    % Changed this from FeedbackDelay
+    TaskParameters.GUI.RewardDelaySelection = 1;
+    TaskParameters.GUIMeta.RewardDelaySelection.Style = 'popupmenu';
+    TaskParameters.GUIMeta.RewardDelaySelection.String = {'TruncatedExp','AutoIncrease','Fix'};
+    TaskParameters.GUIMeta.RewardDelaySelection.Label = 'Reward Delay Selection';
+
+    % Reward Delay Distribution Parameters
+    TaskParameters.GUI.RewardDelayTable.Min = 0.5;
+    TaskParameters.GUI.RewardDelayTable.Tau = 0.75;    
+    TaskParameters.GUI.RewardDelayTable.Max = 1.5;
+    TaskParameters.GUIMeta.RewardDelayTable.Style = 'table';
+    TaskParameters.GUIMeta.RewardDelayTable.Label = 'Reward Delay Distribution';
+    TaskParameters.GUIMeta.RewardDelayTable.ColumnLabel = {'Min','Tau','Max'};
+
+    TaskParameters.GUI.RewardDelayTargetTable.Min = 1;
+    TaskParameters.GUI.RewardDelayTargetTable.Tau = 1.5;    
+    TaskParameters.GUI.RewardDelayTargetTable.Max = 6;
+    TaskParameters.GUIMeta.RewardDelayTargetTable.Style = 'table';
+    TaskParameters.GUIMeta.RewardDelayTargetTable.Label = 'Reward Delay Targets';
+    TaskParameters.GUIMeta.RewardDelayTargetTable.ColumnLabel = {'Min','Tau','Max'};
+
+    TaskParameters.GUI.RewardDelayIncrementTable.Min = 0.01;
+    TaskParameters.GUI.RewardDelayIncrementTable.Tau = 0.01;    
+    TaskParameters.GUI.RewardDelayIncrementTable.Max = 0.05;
+    TaskParameters.GUIMeta.RewardDelayIncrementTable.Style = 'table';
+    TaskParameters.GUIMeta.RewardDelayIncrementTable.Label = 'Target Step Size';
+    TaskParameters.GUIMeta.RewardDelayIncrementTable.ColumnLabel = {'Min','Tau','Max'};
+
+    TaskParameters.GUI.RewardDelayGrace = 0.3;
+    TaskParameters.GUIMeta.RewardDelayGrace.Label = 'Grace Period for Reward';   
+
+    TaskParameters.GUI.RewardDelay = TaskParameters.GUI.RewardDelayTable.Min;
+    TaskParameters.GUIMeta.RewardDelay.Label = 'Current Reward Delay';    
+    TaskParameters.GUIMeta.RewardDelay.Style = 'text';
+
+    TaskParameters.GUIPanels.RewardDelay = {'RewardDelaySelection',...
+        'RewardDelayTable','RewardDelayTargetTable','RewardDelayIncrementTable',...
+        'RewardDelayGrace','RewardDelay'};
     %% Auditory Params
     TaskParameters.GUI.AuditoryAlpha = 0.5;
-    TaskParameters.GUI.LeftBiasAud = 0.5;
-    TaskParameters.GUIMeta.LeftBiasAud.Style = 'text';
     TaskParameters.GUI.SumRates = 100;
     TaskParameters.GUI.AuditoryStimulusTime = 3;
     %min auditory stimulus
-    TaskParameters.GUI.MinSampleAudMin = 0.2;
-    TaskParameters.GUI.MinSampleAudMax = 0.3;
+    TaskParameters.GUI.MinSampleTable.Min = 0.1;
+    TaskParameters.GUI.MinSampleTable.Max = 0.3;
+    TaskParameters.GUIMeta.MinSampleTable.Style = 'table';
+    TaskParameters.GUIMeta.MinSampleTable.Label = 'Minimum Sampling';
+    TaskParameters.GUIMeta.MinSampleTable.ColumnLabel = {'Min','Max'};
+
+    TaskParameters.GUI.MinSampleIncrementTable.Increase = 0.01;
+    TaskParameters.GUI.MinSampleIncrementTable.Decrease = 0.02;
+    TaskParameters.GUIMeta.MinSampleIncrementTable.Style = 'table';
+    TaskParameters.GUIMeta.MinSampleIncrementTable.Label = 'Auto Adjust Values';
+    TaskParameters.GUIMeta.MinSampleIncrementTable.ColumnLabel = {'Increase','Decrease'};
+
     TaskParameters.GUI.MinSampleAudAutoincrement = true;
     TaskParameters.GUIMeta.MinSampleAudAutoincrement.Style = 'checkbox';
-    TaskParameters.GUI.MinSampleAudIncr = 0.01;
-    TaskParameters.GUI.MinSampleAudDecr = 0.02;
-    TaskParameters.GUI.MinSampleAud = TaskParameters.GUI.MinSampleAudMin;
+    TaskParameters.GUIMeta.MinSampleAudAutoincrement.Label = 'Auto Increment Min Sample';
+    TaskParameters.GUI.MinSampleAud = TaskParameters.GUI.MinSampleTable.Min;
     TaskParameters.GUIMeta.MinSampleAud.Style = 'text';
-    TaskParameters.GUI.JackpotAuditory = false;
-    TaskParameters.GUIMeta.JackpotAuditory.Style = 'checkbox';
-    TaskParameters.GUI.JackpotAuditoryTime = 10;
-    TaskParameters.GUIMeta.JackpotAuditoryTime.Style = 'text';
-    TaskParameters.GUIPanels.AudGeneral = {'AuditoryAlpha','LeftBiasAud','SumRates','AuditoryStimulusTime'};
-    TaskParameters.GUIPanels.AudMinSample = {'MinSampleAudMin','MinSampleAudMax','MinSampleAudAutoincrement','MinSampleAudIncr','MinSampleAudDecr','MinSampleAud'};
-    TaskParameters.GUIPanels.AudJackpot = {'JackpotAuditory','JackpotAuditoryTime'};
+    TaskParameters.GUIMeta.MinSampleAud.Label = 'Current Minimum Sample';
+    TaskParameters.GUIPanels.AudGeneral = {'AuditoryAlpha','SumRates','AuditoryStimulusTime'};
+    TaskParameters.GUIPanels.AudMinSample = {'MinSampleTable','MinSampleAudAutoincrement','MinSampleIncrementTable','MinSampleAud'};
     %% Plots
     %Show Plots
     TaskParameters.GUI.ShowPsycAud = 1;
@@ -92,9 +157,9 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIMeta.ShowFix.Style = 'checkbox';
     TaskParameters.GUI.ShowST = 1;
     TaskParameters.GUIMeta.ShowST.Style = 'checkbox';
-    TaskParameters.GUI.ShowFeedback = 1;
-    TaskParameters.GUIMeta.ShowFeedback.Style = 'checkbox';
-    TaskParameters.GUIPanels.ShowPlots = {'ShowPsycAud','ShowVevaiometric','ShowTrialRate','ShowFix','ShowST','ShowFeedback'};
+    TaskParameters.GUI.ShowReward = 1;
+    TaskParameters.GUIMeta.ShowReward.Style = 'checkbox';
+    TaskParameters.GUIPanels.ShowPlots = {'ShowPsycAud','ShowVevaiometric','ShowTrialRate','ShowFix','ShowST','ShowReward'};
     %Vevaiometric
     TaskParameters.GUI.VevaiometricMinWT = 2;
     TaskParameters.GUI.VevaiometricNBin = 8;
@@ -111,8 +176,8 @@ if isempty(fieldnames(TaskParameters))
     %%
     TaskParameters.GUI = orderfields(TaskParameters.GUI);
     %% Tabs
-    TaskParameters.GUITabs.General = {'StimDelay','BiasControl','General','FeedbackDelay'};
-    TaskParameters.GUITabs.Auditory = {'AudGeneral','AudMinSample','AudJackpot'};
+    TaskParameters.GUITabs.General = {'StimulusDelay','BiasControl','General','RewardDelay'};
+    TaskParameters.GUITabs.Auditory = {'AudGeneral','AudMinSample'};
     TaskParameters.GUITabs.Plots = {'ShowPlots','Vevaiometric','PlotRange'};
     %%Non-GUI Parameters (but saved)
     TaskParameters.Figures.OutcomePlot.Position = [200, 200, 1000, 400];
@@ -124,26 +189,33 @@ if isempty(fieldnames(TaskParameters))
     % an Arduino)
     % TaskParameters.CloseFunction = @stopSyncArduino;
 
-
 end
 
 BpodParameterGUI('init', TaskParameters);
 
 %% Initializing data (trial type) vectors
-BpodSystem.Data.Custom.BlockNumber = 1;
-BpodSystem.Data.Custom.BlockTrial = 1;
-BpodSystem.Data.Custom.ChoiceLeft = [];
-BpodSystem.Data.Custom.ChoiceCorrect = [];
-BpodSystem.Data.Custom.Feedback = false(0);
-BpodSystem.Data.Custom.FeedbackTime = [];
-BpodSystem.Data.Custom.FixBroke = false(0);
-BpodSystem.Data.Custom.EarlyWithdrawal = false(0);
-BpodSystem.Data.Custom.FixDur = [];
-BpodSystem.Data.Custom.MT = [];
-BpodSystem.Data.Custom.CatchTrial = false;
-BpodSystem.Data.Custom.ST = [];
-BpodSystem.Data.Custom.Rewarded = false(0);
-BpodSystem.Data.Custom.RewardMagnitude = [TaskParameters.GUI.RewardAmountL  TaskParameters.GUI.RewardAmountR];
+BpodSystem.Data.Custom.BlockNumber      = 1;
+BpodSystem.Data.Custom.BlockTrial       = 1;
+BpodSystem.Data.Custom.TrialNumber      = 1;
+
+BpodSystem.Data.Custom.ChoiceLeft       = NaN;
+BpodSystem.Data.Custom.ChoiceCorrect    = NaN;
+BpodSystem.Data.Custom.Rewarded         = false;
+BpodSystem.Data.Custom.BrokeFixation    = false;
+BpodSystem.Data.Custom.EarlyWithdrawal  = false;
+
+BpodSystem.Data.Custom.CatchTrial       = false;
+
+BpodSystem.Data.Custom.ChoicePortTime   = NaN;
+BpodSystem.Data.Custom.FixationTime     = NaN;
+BpodSystem.Data.Custom.MovementTime     = NaN;
+BpodSystem.Data.Custom.SamplingTime     = NaN;
+BpodSystem.Data.Custom.LingersTime      = NaN;
+
+
+%  BpodSystem.Data.Custom.RewardMagnitude = [TaskParameters.GUI.RewardAmountL  TaskParameters.GUI.RewardAmountR];
+BpodSystem.Data.Custom.RewardMagnitude = ...
+    [TaskParameters.GUI.RewardAmountTable.Left TaskParameters.GUI.RewardAmountTable.Right];
 BpodSystem.Data.Custom.TrialNumber = [];
 % BpodSystem.Data.Custom.AuditoryTrial = rand(1,2) < TaskParameters.GUI.PercentAuditory;
 %RMM 16.05.23
@@ -189,16 +261,28 @@ BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
 BpodSystem.Data.Custom.Rig = getenv('computername');
 % [~,BpodSystem.Data.Custom.Subject] = fileparts(fileparts(fileparts(fileparts(BpodSystem.DataPath))));
 BpodSystem.Data.Custom.Subject = BpodSystem.GUIData.SubjectName;
+
+% Protocol Version Data 
+BpodSystem.Data.Custom.ProtocolName    = 'TwoAFC';
+BpodSystem.Data.Custom.ProtocolVersion = '2.0';
+
 %% Configuring PulsePal
 
 % Added PMA 20-07-2021 % Code to intialise the PulsePal seems to be missing?
 global PulsePalSystem
 if isempty(PulsePalSystem)
-    PulsePal 
+    try
+        PulsePal 
+    catch
+        % error('Can''t initalise Pulsepal...')
+    end
 end   
 
-load PulsePalParamStimulus.mat
-load PulsePalParamFeedback.mat
+temp = load('PulsePalParamStimulus.mat','PulsePalParamStimulus');
+PulsePalParamStimulus = temp.PulsePalParamStimulus;
+temp = load('PulsePalParamFeedback.mat','PulsePalParamFeedback');
+PulsePalParamFeedback = temp.PulsePalParamFeedback;
+
 BpodSystem.Data.Custom.PulsePalParamStimulus=PulsePalParamStimulus;
 BpodSystem.Data.Custom.PulsePalParamFeedback=PulsePalParamFeedback;
 clear PulsePalParamFeedback PulsePalParamStimulus
@@ -217,24 +301,13 @@ BpodSystem.GUIHandles.OutcomePlot.HandlePsycAud = axes('Position',    [2*.05 + 1
 BpodSystem.GUIHandles.OutcomePlot.HandleTrialRate = axes('Position',  [3*.05 + 2*.08   .6  .1  .3], 'Visible', 'off');
 BpodSystem.GUIHandles.OutcomePlot.HandleFix = axes('Position',        [4*.05 + 3*.08   .6  .1  .3], 'Visible', 'off');
 BpodSystem.GUIHandles.OutcomePlot.HandleST = axes('Position',         [5*.05 + 4*.08   .6  .1  .3], 'Visible', 'off');
-BpodSystem.GUIHandles.OutcomePlot.HandleFeedback = axes('Position',   [6*.05 + 5*.08   .6  .1  .3], 'Visible', 'off');
+BpodSystem.GUIHandles.OutcomePlot.HandleReward = axes('Position',   [6*.05 + 5*.08   .6  .1  .3], 'Visible', 'off');
 BpodSystem.GUIHandles.OutcomePlot.HandleVevaiometric = axes('Position',   [7*.05 + 6*.08   .6  .1  .3], 'Visible', 'off');
 MainPlot(BpodSystem.GUIHandles.OutcomePlot,'init');
-BpodSystem.ProtocolFigures.ParameterGUI.Position = TaskParameters.Figures.ParameterGUI.Position;
+% BpodSystem.ProtocolFigures.ParameterGUI.Position = TaskParameters.Figures.ParameterGUI.Position;
 %BpodNotebook('init');
 
-%% Arduino controller activation
-
-% computerName = getenv('COMPUTERNAME');
-% if strcmp(computerName,'CIRCE')
-    % Make the arduino controlling cameras etc. start here
-    % BpodSystem.PluginObjects.SerialConnection = connectTimerArduino;
-    % pause(2); % Need to wait for the connection to actually go live
-    % write(BpodSystem.PluginObjects.SerialConnection,'A','STRING'); %  'A' means run all (cam & barcodes)
-    % pause(0.5);
-% end
-
-%%
+%% Run here! 
 
 RunSession = true;
 
@@ -268,34 +341,13 @@ while RunSession
 
 end
 
-% Stop the timing arduino
-% write(serialCon,'S','STRING');
-
-
-end
-
 function [RawEvents] = try_RunStateMatrix()
-
-try
-    RawEvents = RunStateMatrix;
-catch
-    disp('RunStateMatrix Failed. Trying again...')
-    RawEvents = RunStateMatrix();
-end % End try
+    
+    try
+        RawEvents = RunStateMatrix;
+    catch
+        disp('RunStateMatrix Failed. Trying again...')
+        RawEvents = RunStateMatrix();
+    end % End try
 
 end % End try_RunStateMatrix
-
-
-function serialCon = connectTimerArduino
-    try
-        port = findArduinoPort;
-    catch
-        warning('Couldn''t automatically find timing Arduino. Using a default port. Check timing TTLS are running!!!!');
-        port = 'COM11';
-    end
-    try
-        serialCon =  serialport(port,9600);
-    catch
-        error('failed to connect to timing arduino...');
-    end
-end
