@@ -189,7 +189,6 @@ if isempty(fieldnames(TaskParameters))
     % an Arduino)
     TaskParameters.CloseFunction = @stopSyncArduino;
 
-
 end
 
 BpodParameterGUI('init', TaskParameters);
@@ -346,12 +345,12 @@ end
 end
 
 function [RawEvents] = try_RunStateMatrix()
-
-try
-    RawEvents = RunStateMatrix;
-catch
-    disp('RunStateMatrix Failed. Trying again...')
-    RawEvents = RunStateMatrix();
-end % End try
+    
+    try
+        RawEvents = RunStateMatrix;
+    catch
+        disp('RunStateMatrix Failed. Trying again...')
+        RawEvents = RunStateMatrix();
+    end % End try
 
 end % End try_RunStateMatrix
