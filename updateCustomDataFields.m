@@ -108,6 +108,9 @@ for stateI = statesThisTrial
     end
 end
 
+if any(strncmp('water_',statesThisTrial,6))
+    BpodSystem.Data.Custom.Rewarded(iTrial) = true;
+end
 
 %% State-independent fields
 BpodSystem.Data.Custom.StimDelay(iTrial) = TaskParameters.GUI.StimDelay;
@@ -166,7 +169,6 @@ if TaskParameters.GUI.MinSampleAudAutoincrement
             TaskParameters.GUI.MinSampleAud = max(minSample,...
                     min(maxSample,thisSample));
         end
-
     else % Default behaviour
                   TaskParameters.GUI.MinSampleAud = max(minSample,...
                     min(maxSample,thisSample));
@@ -281,12 +283,11 @@ if iTrial > TaskParameters.GUI.StartEasyTrials
     % (RMM) If 3 unrewarded trials in a row, then no catch on the next trial
     elseif iTrial > 4 && sum(BpodSystem.Data.Custom.Rewarded(iTrial-2:iTrial))==0 
         %no catch on iTrial+1 if Reward(0,0,0) on iTrial(-2:0)
-        BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;
+        BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;    
     else
         BpodSystem.Data.Custom.CatchTrial(iTrial+1) = rand(1,1) < TaskParameters.GUI.ProportionCatch;
-    end   
-else
-    BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;
+    end
+    
 end
 
 %create future trials
