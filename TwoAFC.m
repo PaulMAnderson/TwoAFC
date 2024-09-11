@@ -187,7 +187,7 @@ if isempty(fieldnames(TaskParameters))
     % Is an attempt to allow Bpod to control external equipment upon
     % protocol end (in the inital case it should send a serial command to
     % an Arduino)
-    TaskParameters.CloseFunction = @stopSyncArduino;
+    % TaskParameters.CloseFunction = @stopSyncArduino;
 
 end
 
@@ -338,9 +338,6 @@ while RunSession
     updateCustomDataFields(iTrial);
     MainPlot(BpodSystem.GUIHandles.OutcomePlot,'update',iTrial);
     iTrial = iTrial + 1;
-
-end
-
 
 end
 
