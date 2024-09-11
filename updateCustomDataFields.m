@@ -5,14 +5,13 @@ global TaskParameters
 %% Standard values
 BpodSystem.Data.Custom.ChoiceLeft(iTrial) = NaN;
 BpodSystem.Data.Custom.ChoiceCorrect(iTrial) = NaN;
-BpodSystem.Data.Custom.Reward(iTrial) = true;
+BpodSystem.Data.Custom.Rewarded(iTrial) = false;
 BpodSystem.Data.Custom.RewardTime(iTrial) = NaN;
 BpodSystem.Data.Custom.FixBroke(iTrial) = false;
 BpodSystem.Data.Custom.EarlyWithdrawal(iTrial) = false;
 BpodSystem.Data.Custom.FixDur(iTrial) = NaN;
 BpodSystem.Data.Custom.MT(iTrial) = NaN;
 BpodSystem.Data.Custom.ST(iTrial) = NaN;
-BpodSystem.Data.Custom.Rewarded(iTrial) = false;
 BpodSystem.Data.Custom.TrialNumber(iTrial) = iTrial;
 
 %RMM 16.05.23
@@ -85,18 +84,6 @@ elseif any(strcmp('early_withdrawal',statesThisTrial))
     BpodSystem.Data.Custom.EarlyWithdrawal(iTrial) = true;
 end
 
-% RMM
-if any(strcmp('skipped_feedbackCorrectChoice',statesThisTrial))
-    BpodSystem.Data.Custom.Reward(iTrial) = false;
-end
-% RMM
-
-if any(strcmp('missed_choice',statesThisTrial))
-    BpodSystem.Data.Custom.Reward(iTrial) = false;
-end
-if any(strcmp('skipped_reward',statesThisTrial))
-    BpodSystem.Data.Custom.Reward(iTrial) = false;
-end
 if any(strncmp('water_',statesThisTrial,6))
     BpodSystem.Data.Custom.Rewarded(iTrial) = true;
 end
@@ -171,7 +158,7 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
             BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx(hI)).Enable = 'on';
         end
 
-        if ~BpodSystem.Data.Custom.Reward(iTrial) % If animal dropped out, do not increase
+        if ~BpodSystem.Data.Custom.Rewarded(iTrial) % If animal dropped out, do not increase
             TaskParameters.GUI.RewardDelay = TruncatedExponential(TaskParameters.GUI.RewardDelayMin,...
                 TaskParameters.GUI.RewardDelayMax,TaskParameters.GUI.RewardDelayTau);
         else % Otherwise increase the current set times
@@ -263,15 +250,15 @@ if iTrial > TaskParameters.GUI.StartEasyTrials
         BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;
         
     % (RMM) If 3 (or 4) unrewarded trials in a row, then no catch on the next trial
-    elseif iTrial > 5 && sum(BpodSystem.Data.Custom.Rewarded(iTrial-3:iTrial-1))==0 %no catch on iTrial+1 if Reward(0,0,0) on iTrial(-3:-1)
-        % THere is still a chance of eg Reward(1,0,0) on iTrial(-3:-1) and
+    elseif iTrial > 5 && sum(BpodSystem.Data.Custom.Rewarded(iTrial-3:iTrial-1))==0 %no catch on iTrial+1 if Rewarded(0,0,0) on iTrial(-3:-1)
+        % THere is still a chance of eg Rewarded(1,0,0) on iTrial(-3:-1) and
         % Reward (0) on iTrial to produce a catch on (iTrial+1). In that
         % case, it would be Reward (0,0,0) and catch on the new iTrial.
         % Because that would rarely occur, it's OK.
         BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;
     
     else
-        BpodSystem.Data.Custom.CatchTrial(iTrial+1) = rand(1,1) < TaskParameters.GUI.PercentCatch;
+        BpodSystem.Data.Custom.CatchTrial(iTrial+1) = rand(1,1) < TaskParameters.GUI.ProportionCatch;
     end
     
 else

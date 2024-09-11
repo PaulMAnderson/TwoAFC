@@ -325,7 +325,7 @@ switch Action
         Ydata = BpodSystem.Data.Custom.DV(indxToPlot); Ydata = Ydata(ndxMiss);
         set(BpodSystem.GUIHandles.OutcomePlot.NoResponse, 'xdata', Xdata, 'ydata', Ydata);
         %Plot NoReward trials
-        ndxNoReward = ~BpodSystem.Data.Custom.Reward(indxToPlot);
+        ndxNoReward = ~BpodSystem.Data.Custom.Rewarded(indxToPlot);
         Xdata = indxToPlot(ndxNoReward&~ndxMiss);
         Ydata = BpodSystem.Data.Custom.DV(indxToPlot); Ydata = Ydata(ndxNoReward&~ndxMiss);
         set(BpodSystem.GUIHandles.OutcomePlot.NoReward, 'xdata', Xdata, 'ydata', Ydata);   
@@ -499,7 +499,7 @@ switch Action
             ndxExclude = false(1,nTrials);
             WT = BpodSystem.Data.Custom.RewardTime(startTrial:endTrial);
             BpodSystem.GUIHandles.OutcomePlot.HistNoFeed = histogram(AxesHandles.HandleReward,...
-                                                                     WT(~BpodSystem.Data.Custom.Reward(startTrial:endTrial)...
+                                                                     WT(~BpodSystem.Data.Custom.Rewarded(startTrial:endTrial)...
                                                                          &~BpodSystem.Data.Custom.CatchTrial(startTrial:endTrial)...
                                                                          &~ndxExclude)*1000....
                                                                     );
@@ -508,7 +508,7 @@ switch Action
             BpodSystem.GUIHandles.OutcomePlot.HistNoFeed.FaceColor = 'r';
             %BpodSystem.GUIHandles.OutcomePlot.HistNoFeed.Normalization = 'probability';
             BpodSystem.GUIHandles.OutcomePlot.HistFeed = histogram(AxesHandles.HandleReward,...
-                                                                   WT(BpodSystem.Data.Custom.Reward(startTrial:endTrial)...
+                                                                   WT(BpodSystem.Data.Custom.Rewarded(startTrial:endTrial)...
                                                                        &~BpodSystem.Data.Custom.CatchTrial(startTrial:endTrial)...
                                                                        &~ndxExclude)*1000....
                                                                    );
@@ -516,8 +516,8 @@ switch Action
             BpodSystem.GUIHandles.OutcomePlot.HistFeed.EdgeColor = 'none';
             BpodSystem.GUIHandles.OutcomePlot.HistFeed.FaceColor = 'b';
             %BpodSystem.GUIHandles.OutcomePlot.HistFeed.Normalization = 'probability';
-            %LeftSkip = sum(~BpodSystem.Data.Custom.Reward(startTrial:endTrial)&~BpodSystem.Data.Custom.CatchTrial(startTrial:endTrial)&~ndxExclude&BpodSystem.Data.Custom.ChoiceLeft(startTrial:endTrial)==1)/sum(~BpodSystem.Data.Custom.CatchTrial(startTrial:endTrial)&~ndxExclude&BpodSystem.Data.Custom.ChoiceLeft(startTrial:endTrial)==1);
-            %RightSkip = sum(~BpodSystem.Data.Custom.Reward(startTrial:endTrial)&~BpodSystem.Data.Custom.CatchTrial(startTrial:endTrial)&~ndxExclude&BpodSystem.Data.Custom.ChoiceLeft(startTrial:endTrial)==0)/sum(~BpodSystem.Data.Custom.CatchTrial(startTrial:endTrial)&~ndxExclude&BpodSystem.Data.Custom.ChoiceLeft(startTrial:endTrial)==0);
+            %LeftSkip = sum(~BpodSystem.Data.Custom.Rewarded(startTrial:endTrial)&~BpodSystem.Data.Custom.CatchTrial(startTrial:endTrial)&~ndxExclude&BpodSystem.Data.Custom.ChoiceLeft(startTrial:endTrial)==1)/sum(~BpodSystem.Data.Custom.CatchTrial(startTrial:endTrial)&~ndxExclude&BpodSystem.Data.Custom.ChoiceLeft(startTrial:endTrial)==1);
+            %RightSkip = sum(~BpodSystem.Data.Custom.Rewarded(startTrial:endTrial)&~BpodSystem.Data.Custom.CatchTrial(startTrial:endTrial)&~ndxExclude&BpodSystem.Data.Custom.ChoiceLeft(startTrial:endTrial)==0)/sum(~BpodSystem.Data.Custom.CatchTrial(startTrial:endTrial)&~ndxExclude&BpodSystem.Data.Custom.ChoiceLeft(startTrial:endTrial)==0);
             %cornertext(AxesHandles.HandleReward,{sprintf('L=%1.3f',LeftSkip),sprintf('R=%1.3f',RightSkip)})
             
             % Update min max and tau lines on the feedback histogram
