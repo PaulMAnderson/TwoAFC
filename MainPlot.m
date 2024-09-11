@@ -466,7 +466,7 @@ switch Action
         if TaskParameters.GUI.ShowFix
             %% Stimulus delay
             cla(AxesHandles.HandleFix)
-            fixDur = BpodSystem.Data.Custom.FixDur(startTrial:endTrial);
+            fixDur = BpodSystem.Data.Custom.FixationTime(startTrial:endTrial);
             BpodSystem.GUIHandles.OutcomePlot.HistBroke = histogram(AxesHandles.HandleFix,fixDur(BpodSystem.Data.Custom.BrokeFixation(startTrial:endTrial))*1000);
             BpodSystem.GUIHandles.OutcomePlot.HistBroke.BinWidth = 50;
             BpodSystem.GUIHandles.OutcomePlot.HistBroke.EdgeColor = 'none';
@@ -481,7 +481,7 @@ switch Action
         %% ST - Sampling Time
         if TaskParameters.GUI.ShowST
             cla(AxesHandles.HandleST)
-            st = BpodSystem.Data.Custom.ST(startTrial:endTrial);
+            st = BpodSystem.Data.Custom.SamplingTime(startTrial:endTrial);
             BpodSystem.GUIHandles.OutcomePlot.HistSTEarly = histogram(AxesHandles.HandleST,st(BpodSystem.Data.Custom.EarlyWithdrawal(startTrial:endTrial))*1000);
             BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.BinWidth = 50;
             BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.FaceColor = 'r';

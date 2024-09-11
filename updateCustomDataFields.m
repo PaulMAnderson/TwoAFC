@@ -287,7 +287,8 @@ if iTrial > TaskParameters.GUI.StartEasyTrials
     else
         BpodSystem.Data.Custom.CatchTrial(iTrial+1) = rand(1,1) < TaskParameters.GUI.ProportionCatch;
     end
-    
+else
+    BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;     
 end
 
 %create future trials
