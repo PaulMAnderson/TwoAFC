@@ -341,6 +341,8 @@ while RunSession
 
 end
 
+end % End TwoAFC Protocol
+
 function [RawEvents] = try_RunStateMatrix()
     
     try
