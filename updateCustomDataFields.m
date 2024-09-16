@@ -191,8 +191,14 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
     % Change depending on the reward delay method
     case 'AutoIncrease'
         % Activate Increment and target fields        
-        handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable') );
-        BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx).ColumnEditable(:) = true;
+        handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTargetTable') | ...
+                          strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayIncrementTable') );
+        for j = 1:length(handleIdx)
+            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx(j)).Enable = 'on';
+            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx(j)).ColumnEditable(:) = true;
+        end
+        
 
         if ~BpodSystem.Data.Custom.Rewarded(iTrial) % If animal was not rewarded we do not increase
             TaskParameters.GUI.RewardDelay = TruncatedExponential(TaskParameters.GUI.RewardDelayTable.Min,...
@@ -212,7 +218,23 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
                 % Update value
                 TaskParameters.GUI.RewardDelayTable.Max = ...
                     TaskParameters.GUI.RewardDelayTable.Max + TaskParameters.GUI.RewardDelayIncrementTable.Max;           
-            end           
+            end 
+
+            % Update GUI - Min
+            paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
+            paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+            paramHandle.Data(1) = TaskParameters.GUI.RewardDelayTable.Min;
+
+            % Tau
+            paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
+            paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+            paramHandle.Data(2) = TaskParameters.GUI.RewardDelayTable.Tau;
+
+            % Max
+            paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
+            paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+            paramHandle.Data(3) = TaskParameters.GUI.RewardDelayTable.Max;
+
         end
         % And generate a new Reward Delay value
         TaskParameters.GUI.RewardDelay = TruncatedExponential(TaskParameters.GUI.RewardDelayTable.Min,...
@@ -251,22 +273,8 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
         TaskParameters.GUI.RewardDelay = TaskParameters.GUI.RewardDelayTable.Max;
 end
 
-% Update GUI - Min
-paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
-paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
-paramHandle.Data(1) = TaskParameters.GUI.RewardDelayTable.Min;
 
-% Tau
-paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
-paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
-paramHandle.Data(2) = TaskParameters.GUI.RewardDelayTable.Tau;
-
-% Max
-paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
-paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
-paramHandle.Data(3) = TaskParameters.GUI.RewardDelayTable.Max;
-
-% Current Value
+% Update Current Value
 paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelay');
 paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
 paramHandle.String = num2str(TaskParameters.GUI.RewardDelay);
