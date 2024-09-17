@@ -1,9 +1,6 @@
-function sma = stateMatrix(iTrial) %RMM
+function sma = stateMatrix(iTrial) 
 global BpodSystem
 global TaskParameters
-
-%stateMatrix from Dual2AFCRicardo
-
 
 %% Define ports
 LeftPort      = floor(mod(TaskParameters.GUI.Ports_LMR/100,10));

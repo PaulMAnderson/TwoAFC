@@ -194,8 +194,6 @@ end
 BpodParameterGUI('init', TaskParameters);
 
 %% Initializing data (trial type) vectors
-BpodSystem.Data.Custom.BlockNumber      = 1;
-BpodSystem.Data.Custom.BlockTrial       = 1;
 BpodSystem.Data.Custom.TrialNumber      = 1;
 
 BpodSystem.Data.Custom.ChoiceLeft       = NaN;
@@ -212,16 +210,11 @@ BpodSystem.Data.Custom.MovementTime     = NaN;
 BpodSystem.Data.Custom.SamplingTime     = NaN;
 BpodSystem.Data.Custom.LingersTime      = NaN;
 
-
-%  BpodSystem.Data.Custom.RewardMagnitude = [TaskParameters.GUI.RewardAmountL  TaskParameters.GUI.RewardAmountR];
 BpodSystem.Data.Custom.RewardMagnitude = ...
     [TaskParameters.GUI.RewardAmountTable.Left TaskParameters.GUI.RewardAmountTable.Right];
-BpodSystem.Data.Custom.TrialNumber = [];
-% BpodSystem.Data.Custom.AuditoryTrial = rand(1,2) < TaskParameters.GUI.PercentAuditory;
-%RMM 16.05.23
-BpodSystem.Data.Custom.StartEasyTrial = TaskParameters.GUI.StartEasyTrials;
-%RMM
 
+BpodSystem.Data.Custom.TrialNumber = [];
+BpodSystem.Data.Custom.StartEasyTrials = TaskParameters.GUI.StartEasyTrials;
 
 % make auditory stimuli for first trials
 for a = 1:2
@@ -258,13 +251,13 @@ end%for a+1:2
 BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
 
 %server data
-BpodSystem.Data.Custom.Rig = getenv('computername');
+BpodSystem.Data.Info.Rig = getenv('computername');
 % [~,BpodSystem.Data.Custom.Subject] = fileparts(fileparts(fileparts(fileparts(BpodSystem.DataPath))));
-BpodSystem.Data.Custom.Subject = BpodSystem.GUIData.SubjectName;
+BpodSystem.Data.Info.Subject = BpodSystem.GUIData.SubjectName;
 
 % Protocol Version Data 
-BpodSystem.Data.Custom.ProtocolName    = 'TwoAFC';
-BpodSystem.Data.Custom.ProtocolVersion = '2.0';
+BpodSystem.Data.Info.ProtocolName    = 'TwoAFC';
+BpodSystem.Data.Info.ProtocolVersion = '2.0';
 
 %% Configuring PulsePal
 
