@@ -388,6 +388,7 @@ switch Action
             'string', ['currTrial: ', num2str(iTrial)]);        
 
         %% Psych Aud
+        warning('off','stats:glmfit:PerfectSeparation')
         if TaskParameters.GUI.ShowPsycAud
             AudDV = -BpodSystem.Data.Custom.DV(1:numel(BpodSystem.Data.Custom.ChoiceLeft));
             ndxAud = ones(1,numel(BpodSystem.Data.Custom.ChoiceLeft));
