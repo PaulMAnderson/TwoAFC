@@ -263,13 +263,13 @@ BpodSystem.Data.Info.ProtocolVersion = '2.0';
 
 % Added PMA 20-07-2021 % Code to intialise the PulsePal seems to be missing?
 global PulsePalSystem
-if isempty(PulsePalSystem)
+if  isempty(PulsePalSystem) || (ishandle(PulsePalSystem) && ~isvalid(PulsePalSystem))
     try
         PulsePal 
     catch
         % error('Can''t initalise Pulsepal...')
     end
-end   
+end  
 
 temp = load('PulsePalParamStimulus.mat','PulsePalParamStimulus');
 PulsePalParamStimulus = temp.PulsePalParamStimulus;
