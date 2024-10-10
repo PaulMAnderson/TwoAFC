@@ -180,8 +180,8 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUITabs.Auditory = {'AudGeneral','AudMinSample'};
     TaskParameters.GUITabs.Plots = {'ShowPlots','Vevaiometric','PlotRange'};
     %%Non-GUI Parameters (but saved)
-    TaskParameters.Figures.OutcomePlot.Position = [200, 200, 1000, 400];
-    TaskParameters.Figures.ParameterGUI.Position =  [9, 454, 1474, 562];
+    TaskParameters.Figures.OutcomePlot.Position = [900, 50, 1000, 400];
+    TaskParameters.Figures.ParameterGUI.Position =  [300, 550, 1360, 410];
     
     %% Add a closing function to a figure 
     % Is an attempt to allow Bpod to control external equipment upon
@@ -286,7 +286,8 @@ if ~BpodSystem.EmulatorMode
 end
 
 %% Initialize plots
-BpodSystem.ProtocolFigures.SideOutcomePlotFig = figure('Position', TaskParameters.Figures.OutcomePlot.Position,'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
+BpodSystem.ProtocolFigures.SideOutcomePlotFig = ...
+    figure('Position', TaskParameters.Figures.OutcomePlot.Position,'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
 BpodSystem.GUIHandles.OutcomePlot = [];
 BpodSystem.GUIHandles.OutcomePlot.HandleOutcome = axes('Position',    [  .055          .15 .81 .3]);
 BpodSystem.GUIHandles.OutcomePlot.TextPanel     = axes('Position',    [  .87          .15 .10 .3]);
@@ -297,9 +298,8 @@ BpodSystem.GUIHandles.OutcomePlot.HandleST = axes('Position',         [5*.05 + 4
 BpodSystem.GUIHandles.OutcomePlot.HandleReward = axes('Position',   [6*.05 + 5*.08   .6  .1  .3], 'Visible', 'off');
 BpodSystem.GUIHandles.OutcomePlot.HandleVevaiometric = axes('Position',   [7*.05 + 6*.08   .6  .1  .3], 'Visible', 'off');
 MainPlot(BpodSystem.GUIHandles.OutcomePlot,'init');
-% BpodSystem.ProtocolFigures.ParameterGUI.Position = TaskParameters.Figures.ParameterGUI.Position;
+BpodSystem.ProtocolFigures.ParameterGUI.Position = TaskParameters.Figures.ParameterGUI.Position;
 %BpodNotebook('init');
-
 %% Run here! 
 
 RunSession = true;
