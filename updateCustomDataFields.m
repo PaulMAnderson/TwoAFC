@@ -199,6 +199,30 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
             BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx(j)).ColumnEditable(:) = true;
         end
         
+        % Get the handles to the table
+        paramIdx     = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
+        distHandle   = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+        
+        paramIdx     = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTargetTable');
+        targetHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+
+        paramIdx     = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayIncrementTable');
+        incHandle    = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+
+        % Update the internal values to match the GUI
+        % Distribution
+        TaskParameters.GUI.RewardDelayTable.Min = distHandle.Data(1);
+        TaskParameters.GUI.RewardDelayTable.Tau = distHandle.Data(2);
+        TaskParameters.GUI.RewardDelayTable.Max = distHandle.Data(3);
+        % Target
+        TaskParameters.GUI.RewardDelayTargetTable.Min = targetHandle.Data(1);
+        TaskParameters.GUI.RewardDelayTargetTable.Tau = targetHandle.Data(2);
+        TaskParameters.GUI.RewardDelayTargetTable.Max = targetHandle.Data(3);
+        % Increment
+        TaskParameters.GUI.RewardDelayIncrementTable.Min = incHandle.Data(1);
+        TaskParameters.GUI.RewardDelayIncrementTable.Tau = incHandle.Data(2);
+        TaskParameters.GUI.RewardDelayIncrementTable.Max = incHandle.Data(3);
+        
 
         if ~BpodSystem.Data.Custom.Rewarded(iTrial) % If animal was not rewarded we do not increase
             TaskParameters.GUI.RewardDelay = TruncatedExponential(TaskParameters.GUI.RewardDelayTable.Min,...
@@ -219,21 +243,13 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
                 TaskParameters.GUI.RewardDelayTable.Max = ...
                     TaskParameters.GUI.RewardDelayTable.Max + TaskParameters.GUI.RewardDelayIncrementTable.Max;           
             end 
-
+            
             % Update GUI - Min
-            paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
-            paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
-            paramHandle.Data(1) = TaskParameters.GUI.RewardDelayTable.Min;
-
+            distHandle.Data(1) = TaskParameters.GUI.RewardDelayTable.Min;  
             % Tau
-            paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
-            paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
-            paramHandle.Data(2) = TaskParameters.GUI.RewardDelayTable.Tau;
-
+            distHandle.Data(2) = TaskParameters.GUI.RewardDelayTable.Tau;    
             % Max
-            paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
-            paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
-            paramHandle.Data(3) = TaskParameters.GUI.RewardDelayTable.Max;
+            distHandle.Data(3) = TaskParameters.GUI.RewardDelayTable.Max;
 
         end
         % And generate a new Reward Delay value
@@ -252,9 +268,20 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
         BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx).Enable = 'on';
         BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx).ColumnEditable(:) = true;
 
+        % Get the handles to the table
+        paramIdx     = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTable');
+        distHandle   = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+    
+        % Update the internal values to match the GUI
+        % Distribution
+        TaskParameters.GUI.RewardDelayTable.Min = distHandle.Data(1);
+        TaskParameters.GUI.RewardDelayTable.Tau = distHandle.Data(2);
+        TaskParameters.GUI.RewardDelayTable.Max = distHandle.Data(3);
+
         % Actual delay is from a truncated exp.
         TaskParameters.GUI.RewardDelay = TruncatedExponential(TaskParameters.GUI.RewardDelayTable.Min,...
             TaskParameters.GUI.RewardDelayTable.Max,TaskParameters.GUI.RewardDelayTable.Tau);
+
     case 'Fix'
         % Deactivate Fields
         handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelayTargetTable') | ...
@@ -274,7 +301,7 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
 end
 
 
-% Update Current Value
+% Update Displayed Current Value
 paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelay');
 paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
 paramHandle.String = num2str(TaskParameters.GUI.RewardDelay);
@@ -299,41 +326,62 @@ else
     BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;     
 end
 
-%create future trials
+%% create future trials
+
+% Trial bias control
+% Get handles for trial selection control
+leftBiasH    = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'LeftBias') );                
+futureBiasH  = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FurtureLeftBias') ); 
+
+% Get trial index
+history = 100;        
+idxStart = max(iTrial - history + 1,1);
+considerTrials = idxStart:iTrial; 
+
+% Calculate the reward bias
+try
+    rewardIdx  = BpodSystem.Data.Custom.Rewarded(considerTrials) == 1;     
+    rewardCount = sum(rewardIdx);
+    leftIdx    = BpodSystem.Data.Custom.MoreLeftClicks(considerTrials) == 1;
+    leftCount  = sum(leftIdx);
+    leftRewardIdx = rewardIdx & leftIdx;
+    leftRewardRatio = sum(leftRewardIdx) / rewardCount;
+catch
+    leftRewardRatio = nan;
+end
+
+% First we update the rewarded proportion
+if sum(BpodSystem.Data.Custom.Rewarded) > 10 
+    % but only if at least 10 trials have been rewarded
+    BpodSystem.GUIHandles.ParameterGUI.Params(leftBiasH).String = ...
+        num2str(leftRewardRatio);
+    TaskParameters.GUI.LeftBias = leftRewardRatio;
+end
+
+% We make new trials if there is less than 5 to come...
 if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
-    % We make new trials if there is less than 5 to come...
     latestTrial = numel(BpodSystem.Data.Custom.DV);   
 
     switch TaskParameters.GUIMeta.TrialSelection.String{TaskParameters.GUI.TrialSelection}
-        case 'Even'
-            handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'DesiredLeftBias') );            
-            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx).Enable = 'off';            
-            TaskParameters.GUI.DesiredLeftBias = 0.5;
-            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx).String = num2str(0.5);
-            handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'LeftBias') );   
-            TaskParameters.GUI.LeftBias = 0.5;
-            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx).String = num2str(0.5);
-        
-        case 'Manual'
-            handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'TrialLeftBias') );            
-            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx).Enable = 'on';            
+        case 'Even'         
+            BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).String = num2str(0.5); 
+            BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'off';       
+            TaskParameters.GUI.FurtureLeftBias = 0.5;
+
+        case 'Manual'          
+            BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'on';    
+            TaskParameters.GUI.FurtureLeftBias = str2num(...
+                BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).String);
         
         case 'BiasCorrecting' % Favors side with fewer rewards. Contrast drawn flat & independently.
             % We look only at the last 100 trials
-            history = 100;        
-            idxStart = max(iTrial - history + 1,1);
-            considerTrials = idxStart:iTrial;    
-            rewardIndx = BpodSystem.Data.Custom.Rewarded(considerTrials) == 1;
-            if sum(rewardIndx)>10 % only calculate if more than 10 rewards
-                TaskParameters.GUI.LeftBias = ...
-                    sum(BpodSystem.Data.Custom.MoreLeftClicks(considerTrials) == 1 ...
-                            & rewardIndx ) / sum(rewardIndx);
-            else
-                TaskParameters.GUI.LeftBias = 0.5;
-            end             
-            % updateGUI
-            handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'LeftBias') );   
-            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx).String = num2str(TaskParameters.GUI.LeftBias);
+            BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'off';   
+            % Calculate the desired bias here 
+            % Inverse of left bias with a min of 0.1, max of 0.9
+            desiredBias = min(0.9,max(0.1,(1-TaskParameters.GUI.LeftBias)));
+            TaskParameters.GUI.FurtureLeftBias = desiredBias;
+            BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).String = ...
+                num2str(desiredBias);
     end
         
     % make future trials
@@ -344,10 +392,15 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
         % AuditoryAlpha = 0.1;
     end
     
-    BetaRatio = (1 - min(0.9,max(0.1,TaskParameters.GUI.LeftBias))) / min(0.9,max(0.1,TaskParameters.GUI.LeftBias)); 
-    % use a = ratio*b to yield E[X] = LeftBiasAud using Beta(a,b) pdf
-    % cut off between 0.1-0.9 to prevent extreme values (only one side) and div by zero
+    BetaRatio = TaskParameters.GUI.FurtureLeftBias / ...
+                (1 - TaskParameters.GUI.FurtureLeftBias);
+    
+    % BetaRatio = (1 - min(0.9,max(0.1,TaskParameters.GUI.LeftBias))) / ...
+    %                  min(0.9,max(0.1,TaskParameters.GUI.LeftBias)); 
 
+    % use a = ratio*b to yield E[X] = LeftBiasAud using Beta(a,b) pdf
+    % cut off between 0.1-0.9 to prevent extreme values (only one side) and div by 
+    
     BetaA =  (2*AuditoryAlpha*BetaRatio) / (1+BetaRatio); %make a,b symmetric around AuditoryAlpha to make B symmetric
     BetaB = (AuditoryAlpha-BetaA) + AuditoryAlpha;
 

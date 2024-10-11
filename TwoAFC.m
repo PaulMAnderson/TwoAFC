@@ -41,21 +41,22 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIMeta.TrialSelection.String = {'Even','Manual','BiasCorrecting'};
     TaskParameters.GUIMeta.TrialSelection.Label = 'Trial Selection Method';
     
-    TaskParameters.GUI.DesiredLeftBias = 0.5;
-    TaskParameters.GUIMeta.DesiredLeftBias.Label = 'Desired Left Trial Bias';
-        
     TaskParameters.GUI.LeftBias = 0.5;
     TaskParameters.GUIMeta.LeftBias.Style = 'text';
-    TaskParameters.GUIMeta.LeftBias.Label = 'Actual Left Trial Bias';
+    TaskParameters.GUIMeta.LeftBias.Label = 'Current Left Trial Bias';
 
+    TaskParameters.GUI.FurtureLeftBias = 0.5;
+    TaskParameters.GUIMeta.FurtureLeftBias.Label = 'Future Trial Left Bias';
+        
     TaskParameters.GUI.RewardAmountTable.Left = 12;  
     TaskParameters.GUI.RewardAmountTable.Right = 12;  
     TaskParameters.GUIMeta.RewardAmountTable.Style = 'table';
     TaskParameters.GUIMeta.RewardAmountTable.Label = 'Reward Volumes';
     TaskParameters.GUIMeta.RewardDelayTable.ColumnLabel = {'Left','Right'};
     
-    TaskParameters.GUIPanels.BiasControl = {'TrialSelection','LeftBias',...
-        'DesiredLeftBias','RewardAmountTable'};
+    TaskParameters.GUIPanels.BiasControl = {'TrialSelection',...
+        'LeftBias','FurtureLeftBias','RewardAmountTable'};
+
     %% StimDelay
     % Stimulus Delay Distribution Parameters
     TaskParameters.GUI.StimDelayTable.Min = 0.06;
