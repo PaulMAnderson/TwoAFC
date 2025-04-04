@@ -35,6 +35,7 @@ if isempty(fieldnames(TaskParameters))
         'TimeOutIncorrect','TimeOutBrokeFixation','TimeOutSkippedReward', ...
         'StartEasyTrials','Proportion50Fifty','ProportionCatch', ...
         'IndicateError','Ports_LMR'};    
+
     %% BiasControl
     TaskParameters.GUI.TrialSelection = 1;
     TaskParameters.GUIMeta.TrialSelection.Style = 'popupmenu';
@@ -45,8 +46,8 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIMeta.LeftBias.Style = 'text';
     TaskParameters.GUIMeta.LeftBias.Label = 'Current Left Trial Bias';
 
-    TaskParameters.GUI.FurtureLeftBias = 0.5;
-    TaskParameters.GUIMeta.FurtureLeftBias.Label = 'Future Trial Left Bias';
+    TaskParameters.GUI.FutureLeftBias = 0.5;
+    TaskParameters.GUIMeta.FutureLeftBias.Label = 'Future Trial Left Bias';
         
     TaskParameters.GUI.RewardAmountTable.Left = 12;  
     TaskParameters.GUI.RewardAmountTable.Right = 12;  
@@ -55,7 +56,7 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIMeta.RewardDelayTable.ColumnLabel = {'Left','Right'};
     
     TaskParameters.GUIPanels.BiasControl = {'TrialSelection',...
-        'LeftBias','FurtureLeftBias','RewardAmountTable'};
+        'LeftBias','FutureLeftBias','RewardAmountTable'};
 
     %% StimDelay
     % Stimulus Delay Distribution Parameters
@@ -69,19 +70,9 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.StimDelay = TaskParameters.GUI.StimDelayTable.Min;
     TaskParameters.GUIMeta.StimDelay.Style = 'text';
     TaskParameters.GUIMeta.StimDelay.Label = 'Current Stimulus Delay';
-
     TaskParameters.GUIPanels.StimulusDelay = {'StimDelayTable','StimDelay'};
 
-    % TaskParameters.GUI.StimDelayMin = 0.06;
-    % TaskParameters.GUIMeta.StimDelayMin.Label = 'Minimum Stimulus Delay';
-    % TaskParameters.GUI.StimDelayMax = 0.15;
-    % TaskParameters.GUIMeta.StimDelayMax.Label = 'Maximum Stimulus Delay';
-    % TaskParameters.GUI.StimDelayTau = 0.1;
-    % TaskParameters.GUIMeta.StimDelayTau.Label = 'Tau Stimulus Delay';
-    % TaskParameters.GUI.StimDelay = TaskParameters.GUI.StimDelayMin;
-    % TaskParameters.GUIMeta.StimDelay.Style = 'text';
-    % TaskParameters.GUIMeta.StimDelay.Label = 'Current Stimulus Delay';
-    % TaskParameters.GUIPanels.StimulusDelay = {'StimDelayMin','StimDelayMax','StimDelayTau','StimDelay'};
+
     %% RewardDelay
     % Changed this from FeedbackDelay
     TaskParameters.GUI.RewardDelaySelection = 1;
@@ -121,11 +112,37 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIPanels.RewardDelay = {'RewardDelaySelection',...
         'RewardDelayTable','RewardDelayTargetTable','RewardDelayIncrementTable',...
         'RewardDelayGrace','RewardDelay'};
-    %% Auditory Params
-    TaskParameters.GUI.AuditoryAlpha = 0.5;
+
+    %% Auditory Parameters
+
+    % General
     TaskParameters.GUI.SumRates = 100;
     TaskParameters.GUI.AuditoryStimulusTime = 3;
-    %min auditory stimulus
+
+    % Alpha
+    TaskParameters.GUI.AlphaTable.Min = 0.5;
+    TaskParameters.GUI.AlphaTable.Max = 1;
+    TaskParameters.GUIMeta.AlphaTable.Style = 'table';
+    TaskParameters.GUIMeta.AlphaTable.Label = 'Auditory Alpha';
+    TaskParameters.GUIMeta.AlphaTable.ColumnLabel = {'Min','Max'};
+
+    TaskParameters.GUI.AlphaIncrementTable.Increase = 0.025;
+    TaskParameters.GUI.AlphaIncrementTable.Decrease = 0.05;
+    TaskParameters.GUIMeta.AlphaIncrementTable.Style = 'table';
+    TaskParameters.GUIMeta.AlphaIncrementTable.Label = 'Auto Adjust Values';
+    TaskParameters.GUIMeta.AlphaIncrementTable.ColumnLabel = {'Increase','Decrease'};
+
+    TaskParameters.GUI.AlphaAutoincrement = false;
+    TaskParameters.GUIMeta.AlphaAutoincrement.Style = 'checkbox';
+    TaskParameters.GUIMeta.AlphaAutoincrement.Label = 'Auto Increment Alpha';
+    TaskParameters.GUI.AuditoryAlpha = TaskParameters.GUI.AlphaTable.Min;
+    TaskParameters.GUIMeta.AuditoryAlpha.Style = 'text';
+    TaskParameters.GUIMeta.AuditoryAlpha.Label = 'Current Alpha';
+    % TaskParameters.GUI.ActualEvidence = 0.1; % Place holder until trial is generated
+    % TaskParameters.GUIMeta.ActualEvidence.Style = 'text';
+    % TaskParameters.GUIMeta.ActualEvidence.Label = 'Actual Evidence';
+    
+    % Minimum Sampling
     TaskParameters.GUI.MinSampleTable.Min = 0.1;
     TaskParameters.GUI.MinSampleTable.Max = 0.3;
     TaskParameters.GUIMeta.MinSampleTable.Style = 'table';
@@ -144,7 +161,11 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI.MinSampleAud = TaskParameters.GUI.MinSampleTable.Min;
     TaskParameters.GUIMeta.MinSampleAud.Style = 'text';
     TaskParameters.GUIMeta.MinSampleAud.Label = 'Current Minimum Sample';
-    TaskParameters.GUIPanels.AudGeneral = {'AuditoryAlpha','SumRates','AuditoryStimulusTime'};
+
+    % Assign the variables to panels   
+    TaskParameters.GUIPanels.AudGeneral = {'SumRates','AuditoryStimulusTime'};
+    TaskParameters.GUIPanels.AudAlpha = {'AlphaTable','AlphaAutoincrement','AlphaIncrementTable','AuditoryAlpha'};
+    % TaskParameters.GUIPanels.AudAlpha = {'AlphaTable','AlphaAutoincrement','AlphaIncrementTable','AuditoryAlpha','ActualEvidence'};
     TaskParameters.GUIPanels.AudMinSample = {'MinSampleTable','MinSampleAudAutoincrement','MinSampleIncrementTable','MinSampleAud'};
     %% Plots
     %Show Plots
@@ -178,17 +199,12 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUI = orderfields(TaskParameters.GUI);
     %% Tabs
     TaskParameters.GUITabs.General = {'StimulusDelay','BiasControl','General','RewardDelay'};
-    TaskParameters.GUITabs.Auditory = {'AudGeneral','AudMinSample'};
+    TaskParameters.GUITabs.Auditory = {'AudGeneral','AudAlpha','AudMinSample'};
     TaskParameters.GUITabs.Plots = {'ShowPlots','Vevaiometric','PlotRange'};
     %%Non-GUI Parameters (but saved)
     TaskParameters.Figures.OutcomePlot.Position = [900, 50, 1000, 400];
     TaskParameters.Figures.ParameterGUI.Position =  [300, 550, 1360, 410];
     
-    %% Add a closing function to a figure 
-    % Is an attempt to allow Bpod to control external equipment upon
-    % protocol end (in the inital case it should send a serial command to
-    % an Arduino)
-    % TaskParameters.CloseFunction = @stopSyncArduino;
 
 end
 
@@ -218,36 +234,8 @@ BpodSystem.Data.Custom.TrialNumber = [];
 BpodSystem.Data.Custom.StartEasyTrials = TaskParameters.GUI.StartEasyTrials;
 
 % make auditory stimuli for first trials
-for a = 1:2
-    % RMM 16.05.23
-    BpodSystem.Data.Custom.EffectiveAlpha = TaskParameters.GUI.AuditoryAlpha/4; % 'divided by 4' comes from the line below.
-    % RMM
-    BpodSystem.Data.Custom.AuditoryOmega(a) = betarnd(TaskParameters.GUI.AuditoryAlpha/4,TaskParameters.GUI.AuditoryAlpha/4,1,1);
-    BpodSystem.Data.Custom.LeftClickRate(a) = round(BpodSystem.Data.Custom.AuditoryOmega(a)*TaskParameters.GUI.SumRates);
-    BpodSystem.Data.Custom.RightClickRate(a) = round((1-BpodSystem.Data.Custom.AuditoryOmega(a))*TaskParameters.GUI.SumRates);
-    BpodSystem.Data.Custom.LeftClickTrain{a} = GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(a), TaskParameters.GUI.AuditoryStimulusTime);
-    BpodSystem.Data.Custom.RightClickTrain{a} = GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(a), TaskParameters.GUI.AuditoryStimulusTime);
-    %correct left/right click train
-    if ~isempty(BpodSystem.Data.Custom.LeftClickTrain{a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{a})
-        BpodSystem.Data.Custom.LeftClickTrain{a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{a}(1),BpodSystem.Data.Custom.RightClickTrain{a}(1));
-        BpodSystem.Data.Custom.RightClickTrain{a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{a}(1),BpodSystem.Data.Custom.RightClickTrain{a}(1));
-    elseif  isempty(BpodSystem.Data.Custom.LeftClickTrain{a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{a})
-        BpodSystem.Data.Custom.LeftClickTrain{a}(1) = BpodSystem.Data.Custom.RightClickTrain{a}(1);
-    elseif ~isempty(BpodSystem.Data.Custom.LeftClickTrain{1}) &&  isempty(BpodSystem.Data.Custom.RightClickTrain{a})
-        BpodSystem.Data.Custom.RightClickTrain{a}(1) = BpodSystem.Data.Custom.LeftClickTrain{a}(1);
-    else
-        BpodSystem.Data.Custom.LeftClickTrain{a} = round(1/BpodSystem.Data.Custom.LeftClickRate*10000)/10000;
-        BpodSystem.Data.Custom.RightClickTrain{a} = round(1/BpodSystem.Data.Custom.RightClickRate*10000)/10000;
-    end
-    if length(BpodSystem.Data.Custom.LeftClickTrain{a}) > length(BpodSystem.Data.Custom.RightClickTrain{a})
-        BpodSystem.Data.Custom.MoreLeftClicks(a) = double(1);
-    elseif length(BpodSystem.Data.Custom.LeftClickTrain{1}) < length(BpodSystem.Data.Custom.RightClickTrain{a})
-        BpodSystem.Data.Custom.MoreLeftClicks(a) = double(0);
-    else
-        BpodSystem.Data.Custom.MoreLeftClicks(a) = NaN;
-    end
-    BpodSystem.Data.Custom.DV(a) = (length(BpodSystem.Data.Custom.LeftClickTrain{a}) - length(BpodSystem.Data.Custom.RightClickTrain{a}))./(length(BpodSystem.Data.Custom.LeftClickTrain{a}) + length(BpodSystem.Data.Custom.RightClickTrain{a}));
-end%for a+1:2
+% Draw 2 trials, from trial 0, with auditory alpha 0.1 and even (0.5) bias
+generateAuditoryStimuli(2,0.1,0.5);
 
 BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler';
 
@@ -301,6 +289,7 @@ BpodSystem.GUIHandles.OutcomePlot.HandleVevaiometric = axes('Position',   [7*.05
 MainPlot(BpodSystem.GUIHandles.OutcomePlot,'init');
 BpodSystem.ProtocolFigures.ParameterGUI.Position = TaskParameters.Figures.ParameterGUI.Position;
 %BpodNotebook('init');
+
 %% Run here! 
 
 RunSession = true;

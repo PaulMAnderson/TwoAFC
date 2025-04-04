@@ -1,4 +1,5 @@
 function MainPlot(AxesHandles, Action, varargin)
+
 global nTrialsToShow %this is for convenience
 global BpodSystem
 global TaskParameters
@@ -104,10 +105,11 @@ switch Action
 
         textNames  = {'CumRwdL','CumRwdR','nTrialsL','nTrialsR',...
             'ChoiceLeft','ChoiceRight','PercCorrect','percCorrL',...
-            'percCorrR','RewardDelay','currTr'};
+            'percCorrR','RewardDelay','currTr','currDV'};
         textLabels = {'Left: 0mL','Right: 0mL','Left trials: 0',...
             'Right trials: 0','Chose left: 0','Chose right: 0',...
-            'Correct:','CorrL:','CorrR:','Curr delay:','Curr Trial:'};
+            'Correct:','CorrL:','CorrR:','Delay:','Trial #:',...
+            'Evidence:'};
         nLabels = length(textLabels);
         
         AxesHandles.TextPanel.XLim = [0 10];
@@ -385,7 +387,11 @@ switch Action
         set(BpodSystem.GUIHandles.OutcomePlot.RewardDelay,...
             'string', ['Delay: ', num2str(currRewardDelay)]);
         set(BpodSystem.GUIHandles.OutcomePlot.currTr,...
-            'string', ['currTrial: ', num2str(iTrial)]);        
+            'string', ['Trial #: ', num2str(iTrial)]);        
+        set(BpodSystem.GUIHandles.OutcomePlot.currDV,...
+            'string', ['Evidence: ', num2str(...
+             BpodSystem.Data.Custom.DV(iTrial)) ] );     
+
 
         %% Psych Aud
         warning('off','stats:glmfit:PerfectSeparation')

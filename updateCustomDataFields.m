@@ -8,11 +8,10 @@ function updateCustomDataFields(iTrial)
 
 %% Load global variables
 % Would like to remove this and have it take the BpodSystem as in input
-% variable, or else be a method of an object
+% % variable, or else be a method of an object
 
 global BpodSystem
 global TaskParameters
-
 
 %% Standard values
 % We set a range of values to be their defaults, they only change if
@@ -20,11 +19,13 @@ global TaskParameters
 % Logical or numeric values
 BpodSystem.Data.Custom.TrialNumber(iTrial)      = iTrial;
 
-BpodSystem.Data.Custom.ChoiceLeft(iTrial)       = false;
-BpodSystem.Data.Custom.ChoiceCorrect(iTrial)    = false;
 BpodSystem.Data.Custom.Rewarded(iTrial)         = false;
 BpodSystem.Data.Custom.BrokeFixation(iTrial)    = false;
 BpodSystem.Data.Custom.EarlyWithdrawal(iTrial)  = false;
+
+% Possible NaN values
+BpodSystem.Data.Custom.ChoiceLeft(iTrial)       = NaN;
+BpodSystem.Data.Custom.ChoiceCorrect(iTrial)    = NaN;
 
 % Times
 BpodSystem.Data.Custom.ChoicePortTime(iTrial)   = NaN;
@@ -34,7 +35,6 @@ BpodSystem.Data.Custom.SamplingTime(iTrial)     = NaN;
 BpodSystem.Data.Custom.LingersTime(iTrial)      = NaN;
 
 %% Checking states and rewriting standard
-
 statesThisTrial = BpodSystem.Data.RawData.OriginalStateNamesByNumber{iTrial}...
     (BpodSystem.Data.RawData.OriginalStateData{iTrial});
 
@@ -51,10 +51,13 @@ for stateI = statesThisTrial
                 diff(BpodSystem.Data.RawEvents.Trial{end}.States.stimulus_delivery_min(1,:));
         % If the animal made the full stimulus it is a different state
         case 'stimulus_delivery'
+            % Stimulus starts at stimulus_delivery_min and then continues
+            % to the end of stimulus_delivery
             BpodSystem.Data.Custom.SamplingTime(iTrial) = ...
-                diff(BpodSystem.Data.RawEvents.Trial{end}.States.stimulus_delivery(1,:));
+                BpodSystem.Data.RawEvents.Trial{end}.States.stimulus_delivery(end,end) - ...
+                BpodSystem.Data.RawEvents.Trial{end}.States.stimulus_delivery_min(1,1);            
 
-         % How long did the animal take to make a decision (movement time0
+         % How long did the animal take to make a decision (movement time)
         case 'wait_Sin'
             BpodSystem.Data.Custom.MovementTime(end) = ...
                 diff(BpodSystem.Data.RawEvents.Trial{end}.States.wait_Sin(1,:));
@@ -66,6 +69,7 @@ for stateI = statesThisTrial
             BpodSystem.Data.Custom.ChoicePortTime(iTrial) = ...
             BpodSystem.Data.RawEvents.Trial{end}.States.rewarded_Lin(end,end) - ...
             BpodSystem.Data.RawEvents.Trial{end}.States.rewarded_Lin(1,1);
+            
         case 'rewarded_Rin'
             BpodSystem.Data.Custom.ChoiceLeft(iTrial) = 0;
             BpodSystem.Data.Custom.ChoiceCorrect(iTrial) = 1;
@@ -108,6 +112,7 @@ for stateI = statesThisTrial
     end
 end
 
+% Extra catch for water states
 if any(strncmp('water_',statesThisTrial,6))
     BpodSystem.Data.Custom.Rewarded(iTrial) = true;
 end
@@ -120,18 +125,9 @@ BpodSystem.Data.Custom.MinSampleAud(iTrial) = TaskParameters.GUI.MinSampleAud;
 BpodSystem.Data.Custom.RewardMagnitude(iTrial+1,:) = ...
     [TaskParameters.GUI.RewardAmountTable.Left TaskParameters.GUI.RewardAmountTable.Right];
 
-%% Are we in the 'easy trials' at the beginning of a session?
 
-BpodSystem.Data.Custom.StartEasyTrials(iTrial) = TaskParameters.GUI.StartEasyTrials;
+%% Updating Delays - Minimal Sampling Time
 
-if iTrial <= TaskParameters.GUI.StartEasyTrials
-    BpodSystem.Data.Custom.IsEasyTrial(iTrial) = true;
-else
-    BpodSystem.Data.Custom.IsEasyTrial(iTrial) = false;
-end
-
-
-%% Updating Delays
 % min sampling time auditory
 if TaskParameters.GUI.MinSampleAudAutoincrement 
 
@@ -139,8 +135,13 @@ if TaskParameters.GUI.MinSampleAudAutoincrement
     history = 50;
     criticalValue = 0.8;
 
-    idxStart = max(iTrial - history + 1,1);
-    considerTrials = idxStart:iTrial;    
+    % We will only begin updating the sampling after 50 trials
+    if iTrial < history
+        considerTrials = [];
+    else
+        idxStart = max(iTrial - history + 1,1);
+        considerTrials = idxStart:iTrial;    
+    end
 
     minSample  = TaskParameters.GUI.MinSampleTable.Min;
     maxSample  = TaskParameters.GUI.MinSampleTable.Max;
@@ -158,7 +159,7 @@ if TaskParameters.GUI.MinSampleAudAutoincrement
             TaskParameters.GUI.MinSampleAud = min(maxSample,...
                     max(minSample,thisSample + increase));
         elseif performance < criticalValue/2
-          % If performance if quite bad we always decrease 
+          % If performance is quite bad we always decrease 
             TaskParameters.GUI.MinSampleAud = max(minSample,...
                     min(maxSample,thisSample - decrease));            
         elseif performance < criticalValue && ~completedSampling
@@ -177,16 +178,23 @@ else
     TaskParameters.GUI.MinSampleAud = TaskParameters.GUI.MinSampleTable.Min;
 end
 
+% % Update GUI
+% paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'MinSampleAud');
+% paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+% paramHandle.String = num2str(TaskParameters.GUI.MinSampleAud);
+
+%% Updating Delays - Pre Stimulus Delay
 TaskParameters.GUI.StimDelay  = TruncatedExponential(TaskParameters.GUI.StimDelayTable.Min,...
-                TaskParameters.GUI.StimDelayTable.Max, TaskParameters.GUI.StimDelayTable.Tau);
+                                    TaskParameters.GUI.StimDelayTable.Max, ...
+                                    TaskParameters.GUI.StimDelayTable.Tau);
 
-% Update GUI
-paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'StimDelay');
-paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
-paramHandle.String = num2str(TaskParameters.GUI.StimDelay);
+% % Update GUI
+% paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'StimDelay');
+% paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+% paramHandle.String = num2str(TaskParameters.GUI.StimDelay);
 
 
-% Reward delay
+%% Updating Delays - % Reward delay
 switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.RewardDelaySelection}
     % Change depending on the reward delay method
     case 'AutoIncrease'
@@ -225,8 +233,10 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
         
 
         if ~BpodSystem.Data.Custom.Rewarded(iTrial) % If animal was not rewarded we do not increase
-            TaskParameters.GUI.RewardDelay = TruncatedExponential(TaskParameters.GUI.RewardDelayTable.Min,...
-                TaskParameters.GUI.RewardDelayTable.Max,TaskParameters.GUI.RewardDelayTable.Tau);
+            TaskParameters.GUI.RewardDelay = TruncatedExponential( ...
+                                                TaskParameters.GUI.RewardDelayTable.Min,...
+                                                TaskParameters.GUI.RewardDelayTable.Max, ...
+                                                TaskParameters.GUI.RewardDelayTable.Tau);
         else % Otherwise increase the current set times
             if TaskParameters.GUI.RewardDelayTable.Min < TaskParameters.GUI.RewardDelayTargetTable.Min
                 % Update value
@@ -301,21 +311,29 @@ switch TaskParameters.GUIMeta.RewardDelaySelection.String{TaskParameters.GUI.Rew
 end
 
 
-% Update Displayed Current Value
-paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelay');
-paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
-paramHandle.String = num2str(TaskParameters.GUI.RewardDelay);
+% % Update Displayed Current Value
+% paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'RewardDelay');
+% paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+% paramHandle.String = num2str(TaskParameters.GUI.RewardDelay);
 
-%% Drawing future trials
+%% Drawing future trials - Are we in the 'easy trials' at the beginning of a session?
 
-% Catch trial calculations
-% determine if catch trial
-if iTrial > TaskParameters.GUI.StartEasyTrials
-    
+BpodSystem.Data.Custom.StartEasyTrials(iTrial) = TaskParameters.GUI.StartEasyTrials;
+
+if iTrial <= TaskParameters.GUI.StartEasyTrials
+    BpodSystem.Data.Custom.IsEasyTrial(iTrial) = true;
+else
+    BpodSystem.Data.Custom.IsEasyTrial(iTrial) = false;
+end
+
+
+%% Drawing future trials - Catch trial determination
+
+if ~BpodSystem.Data.Custom.IsEasyTrial(iTrial)    
     if BpodSystem.Data.Custom.CatchTrial(iTrial)
         % Don't have two catch trials in a row
         BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;     
-    % (RMM) If 3 unrewarded trials in a row, then no catch on the next trial
+        % If 3 unrewarded trials in a row, then no catch on the next trial
     elseif iTrial > 4 && sum(BpodSystem.Data.Custom.Rewarded(iTrial-2:iTrial))==0 
         %no catch on iTrial+1 if Reward(0,0,0) on iTrial(-2:0)
         BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;    
@@ -326,125 +344,149 @@ else
     BpodSystem.Data.Custom.CatchTrial(iTrial+1) = false;     
 end
 
-%% create future trials
-
-% Trial bias control
-% Get handles for trial selection control
-leftBiasH    = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'LeftBias') );                
-futureBiasH  = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FurtureLeftBias') ); 
-
-% Get trial index
-history = 100;        
-idxStart = max(iTrial - history + 1,1);
-considerTrials = idxStart:iTrial; 
-
-% Calculate the reward bias
-try
-    rewardIdx  = BpodSystem.Data.Custom.Rewarded(considerTrials) == 1;     
-    rewardCount = sum(rewardIdx);
-    leftIdx    = BpodSystem.Data.Custom.MoreLeftClicks(considerTrials) == 1;
-    leftCount  = sum(leftIdx);
-    leftRewardIdx = rewardIdx & leftIdx;
-    leftRewardRatio = sum(leftRewardIdx) / rewardCount;
-catch
-    leftRewardRatio = nan;
-end
-
-% First we update the rewarded proportion
-if sum(BpodSystem.Data.Custom.Rewarded) > 10 
-    % but only if at least 10 trials have been rewarded
-    BpodSystem.GUIHandles.ParameterGUI.Params(leftBiasH).String = ...
-        num2str(leftRewardRatio);
-    TaskParameters.GUI.LeftBias = leftRewardRatio;
-end
-
+%% Drawing future trials - Auditory Stimuli
 % We make new trials if there is less than 5 to come...
 if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
-    latestTrial = numel(BpodSystem.Data.Custom.DV);   
 
-    switch TaskParameters.GUIMeta.TrialSelection.String{TaskParameters.GUI.TrialSelection}
-        case 'Even'         
-            BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).String = num2str(0.5); 
-            BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'off';       
-            TaskParameters.GUI.FurtureLeftBias = 0.5;
-
-        case 'Manual'          
-            BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'on';    
-            TaskParameters.GUI.FurtureLeftBias = str2num(...
-                BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).String);
-        
-        case 'BiasCorrecting' % Favors side with fewer rewards. Contrast drawn flat & independently.
-            % We look only at the last 100 trials
-            BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'off';   
-            % Calculate the desired bias here 
-            % Inverse of left bias with a min of 0.1, max of 0.9
-            desiredBias = min(0.9,max(0.1,(1-TaskParameters.GUI.LeftBias)));
-            TaskParameters.GUI.FurtureLeftBias = desiredBias;
-            BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).String = ...
-                num2str(desiredBias);
-    end
-        
-    % make future trials
-    if iTrial > TaskParameters.GUI.StartEasyTrials
-        AuditoryAlpha = TaskParameters.GUI.AuditoryAlpha;
+    % Determine the alpha
+    if iTrial <= TaskParameters.GUI.StartEasyTrials 
+        % Easy trials are hardcoded to 0.1
+        TaskParameters.GUI.AuditoryAlpha = 0.1;
     else
-        AuditoryAlpha = TaskParameters.GUI.AuditoryAlpha/4;
-        % AuditoryAlpha = 0.1;
+        % Are we are automatically adjusting the alpha?
+        if TaskParameters.GUI.AlphaAutoincrement 
+
+            % We activate the table
+            handleIdx = find(strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AlphaIncrementTable'));                      
+            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx).Enable = 'on';
+
+            % Enable all cells
+            handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AlphaTable'));
+            handle = BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx);
+            handle.ColumnEditable(2) = true;
+    
+            % We need to check the recent performance
+            % Get trial index
+            history = 100;   
+            if iTrial < history 
+                % We don't update the alpha if it's early in the session
+                increaseAlpha = false;
+            else
+                idxStart = max(iTrial - history + 1,1);
+                considerTrials = idxStart:iTrial; 
+            
+                performanceCriteria = 0.80;
+                correctProportion = sum(BpodSystem.Data.Custom.ChoiceCorrect(considerTrials))...
+                                    ./ length(considerTrials);
+                
+                % Is the animal performing with less than 20% errors?
+                if correctProportion >= performanceCriteria
+                    increaseAlpha = true;
+                else
+                    increaseAlpha = false;
+                end
+            end
+
+            % Only update if trial was rewarded
+            if increaseAlpha && BpodSystem.Data.Custom.Rewarded(iTrial) 
+                TaskParameters.GUI.AuditoryAlpha = min(max( ...
+                    TaskParameters.GUI.AuditoryAlpha + TaskParameters.GUI.AlphaIncrementTable.Increase,...
+                    TaskParameters.GUI.AlphaTable.Min),...
+                    TaskParameters.GUI.AlphaTable.Max);
+            elseif ~increaseAlpha && ~BpodSystem.Data.Custom.Rewarded(iTrial)
+                % Decrease
+                TaskParameters.GUI.AuditoryAlpha = max(min( ...
+                    TaskParameters.GUI.AuditoryAlpha - TaskParameters.GUI.AlphaIncrementTable.Decrease, ...
+                    TaskParameters.GUI.AlphaTable.Max),...
+                    TaskParameters.GUI.AlphaTable.Min);
+            end
+        else % We take the set min and deactivate the table 
+            % Deactivate Fields
+            handleIdx = find(strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AlphaIncrementTable'));                      
+            BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx).Enable = 'off';
+            
+            % Now disable the other cells on this table
+            handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AlphaTable'));
+            handle = BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx);
+            handle.ColumnEditable(2) = false;
+    
+            TaskParameters.GUI.AuditoryAlpha = TaskParameters.GUI.AlphaTable.Min;                  
+        end
+    end
+
+    AuditoryAlpha = TaskParameters.GUI.AuditoryAlpha;
+    
+    % Update the GUI
+    % paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AuditoryAlpha');
+    % paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+    % if iTrial <= TaskParameters.GUI.StartEasyTrials
+    %     paramHandle.String = '0.1 (Easy)';
+    % else
+    %     paramHandle.String = num2str(TaskParameters.GUI.AuditoryAlpha);
+    % end
+    
+    %% Drawing future trials - Trial bias control
+
+    % Get handles for trial selection control
+    leftBiasH    = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'LeftBias') );                
+    futureBiasH  = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FutureLeftBias') ); 
+    
+    % Get trial index
+    history = 100;        
+    idxStart = max(iTrial - history + 1,1);
+    considerTrials = idxStart:iTrial; 
+    
+    % Calculate the reward bias
+    try
+        rewardIdx  = BpodSystem.Data.Custom.Rewarded(considerTrials) == 1;     
+        rewardCount = sum(rewardIdx);
+        leftIdx    = BpodSystem.Data.Custom.MoreLeftClicks(considerTrials) == 1;
+        leftCount  = sum(leftIdx);
+        leftRewardIdx = rewardIdx & leftIdx;
+        leftRewardRatio = sum(leftRewardIdx) / rewardCount;
+    catch
+        leftRewardRatio = nan;
     end
     
-    BetaRatio = TaskParameters.GUI.FurtureLeftBias / ...
-                (1 - TaskParameters.GUI.FurtureLeftBias);
+    % First we update the rewarded proportion
+    if sum(BpodSystem.Data.Custom.Rewarded) > 10 
+        % but only if at least 10 trials have been rewarded
+        BpodSystem.GUIHandles.ParameterGUI.Params(leftBiasH).String = ...
+            num2str(leftRewardRatio);
+        TaskParameters.GUI.LeftBias = leftRewardRatio;
+    end
     
-    % BetaRatio = (1 - min(0.9,max(0.1,TaskParameters.GUI.LeftBias))) / ...
-    %                  min(0.9,max(0.1,TaskParameters.GUI.LeftBias)); 
-
-    % use a = ratio*b to yield E[X] = LeftBiasAud using Beta(a,b) pdf
-    % cut off between 0.1-0.9 to prevent extreme values (only one side) and div by 
-    
-    BetaA =  (2*AuditoryAlpha*BetaRatio) / (1+BetaRatio); %make a,b symmetric around AuditoryAlpha to make B symmetric
-    BetaB = (AuditoryAlpha-BetaA) + AuditoryAlpha;
-
-    for a = 1:5
-        if rand(1,1) < TaskParameters.GUI.Proportion50Fifty && iTrial > TaskParameters.GUI.StartEasyTrials
-            BpodSystem.Data.Custom.AuditoryOmega(latestTrial+a) = 0.5;
-        else
-            BpodSystem.Data.Custom.AuditoryOmega(latestTrial+a) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
-        end
-        % RMM 16.05.23 - Adding a new field to record the effective
-        %alpha (which depends on the StartEasyTrial)
-        BpodSystem.Data.Custom.EffectiveAlpha(latestTrial+a) = AuditoryAlpha;
-        % RMM
-        BpodSystem.Data.Custom.LeftClickRate(latestTrial+a) = ...
-            round(BpodSystem.Data.Custom.AuditoryOmega(latestTrial+a).*TaskParameters.GUI.SumRates); 
-        BpodSystem.Data.Custom.RightClickRate(latestTrial+a) = ...
-            round((1-BpodSystem.Data.Custom.AuditoryOmega(latestTrial+a)).*TaskParameters.GUI.SumRates);
-        BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a} = ...
-            GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(latestTrial+a), TaskParameters.GUI.AuditoryStimulusTime);
-        BpodSystem.Data.Custom.RightClickTrain{latestTrial+a} = ...
-            GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(latestTrial+a), TaskParameters.GUI.AuditoryStimulusTime);
+    if iTrial < history % In the first hundred trials we stay even
+        TaskParameters.GUI.FutureLeftBias = 0.5;
+    else
+        switch TaskParameters.GUIMeta.TrialSelection.String{TaskParameters.GUI.TrialSelection}
+                case 'Even'         
+                    BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).String = num2str(0.5); 
+                    BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'off';       
+                    TaskParameters.GUI.FutureLeftBias = 0.5;
         
-        %correct left/right click train
-        if ~isempty(BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{latestTrial+a})
-            BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}(1),BpodSystem.Data.Custom.RightClickTrain{latestTrial+a}(1));
-            BpodSystem.Data.Custom.RightClickTrain{latestTrial+a}(1) = min(BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}(1),BpodSystem.Data.Custom.RightClickTrain{latestTrial+a}(1));
-        elseif  isempty(BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}) && ~isempty(BpodSystem.Data.Custom.RightClickTrain{latestTrial+a})
-            BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}(1) = BpodSystem.Data.Custom.RightClickTrain{latestTrial+a}(1);
-        elseif ~isempty(BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}) &&  isempty(BpodSystem.Data.Custom.RightClickTrain{latestTrial+a})
-            BpodSystem.Data.Custom.RightClickTrain{latestTrial+a}(1) = BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}(1);
-        else
-            BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a} = round(1/BpodSystem.Data.Custom.LeftClickRate*10000)/10000;
-            BpodSystem.Data.Custom.RightClickTrain{latestTrial+a} = round(1/BpodSystem.Data.Custom.RightClickRate*10000)/10000;
+                case 'Manual'          
+                    BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'on';    
+                    TaskParameters.GUI.FutureLeftBias = str2num(...
+                        BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).String);
+                
+                case 'BiasCorrecting' % Favors side with fewer rewards. Contrast drawn flat & independently.
+                    % We look only at the last 100 trials
+                    BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'off';   
+                    % Calculate the desired bias here 
+                    % Inverse of left bias with a min of 0.1, max of 0.9
+                    desiredBias = min(0.9,max(0.1,(1-TaskParameters.GUI.LeftBias)));
+                    TaskParameters.GUI.FutureLeftBias = desiredBias;
+                    BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).String = ...
+                    num2str(desiredBias);
         end
-        if length(BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}) > length(BpodSystem.Data.Custom.RightClickTrain{latestTrial+a})
-            BpodSystem.Data.Custom.MoreLeftClicks(latestTrial+a) = 1;
-        elseif length(BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}) < length(BpodSystem.Data.Custom.RightClickTrain{latestTrial+a})
-            BpodSystem.Data.Custom.MoreLeftClicks(latestTrial+a) = 0;
-        else
-            BpodSystem.Data.Custom.MoreLeftClicks(latestTrial+a) = NaN;
-        end
-        BpodSystem.Data.Custom.DV(latestTrial+a) = (length(BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}) - length(BpodSystem.Data.Custom.RightClickTrain{latestTrial+a}))./(length(BpodSystem.Data.Custom.LeftClickTrain{latestTrial+a}) + length(BpodSystem.Data.Custom.RightClickTrain{latestTrial+a}));
-    end   
-end 
+    end
+
+    %% Drawing future trials - Draw from the alpha distribution
+    
+    generateAuditoryStimuli(5, AuditoryAlpha)
+
+end
 
 % send auditory stimuli to PulsePal for next trial
 if ~BpodSystem.EmulatorMode
@@ -452,9 +494,44 @@ if ~BpodSystem.EmulatorMode
     SendCustomPulseTrain(2, BpodSystem.Data.Custom.LeftClickTrain{iTrial+1}, ones(1,length(BpodSystem.Data.Custom.LeftClickTrain{iTrial+1}))*5);
 end
 
-%%update hidden TaskParameter fields
+%% update hidden TaskParameter fields
 TaskParameters.Figures.OutcomePlot.Position  = BpodSystem.ProtocolFigures.SideOutcomePlotFig.Position;
 TaskParameters.Figures.ParameterGUI.Position = BpodSystem.ProtocolFigures.ParameterGUI.Position;
 
 
+end % End function update Custom Data Fields
+
+
+
+%% Sub functions
+function Exp = TruncatedExponential(varargin)
+
+% input values
+min_value = varargin{1};
+max_value = varargin{2};
+tau = varargin{3};
+if length(varargin)>3
+    m = varargin{4}(1);n = varargin{4}(2);
+else
+    m=1;n=1;
 end
+
+% Initialize to a large value
+Exp = max_value*ones(m*n,1)+1;
+
+% sample until in range
+counter = 1;
+while any(Exp > (max_value-min_value)) && counter < 10000
+    Exp(Exp > (max_value-min_value)) = exprnd(tau,sum(Exp > (max_value-min_value)),1);
+    
+    counter = counter + 1;
+end
+
+%add the offset
+Exp = Exp + min_value;
+
+
+%reshape
+Exp = reshape(Exp,m,n);
+
+end % End function TruncatedExponential
