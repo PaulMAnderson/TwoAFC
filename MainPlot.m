@@ -488,12 +488,21 @@ switch Action
         %% ST - Sampling Time
         if TaskParameters.GUI.ShowST
             cla(AxesHandles.HandleST)
+            binEdges = 0:50:1000;
             st = BpodSystem.Data.Custom.SamplingTime(startTrial:endTrial);
-            BpodSystem.GUIHandles.OutcomePlot.HistSTEarly = histogram(AxesHandles.HandleST,st(BpodSystem.Data.Custom.EarlyWithdrawal(startTrial:endTrial))*1000);
+            % First show dropouts
+            BpodSystem.GUIHandles.OutcomePlot.HistSTEarly = ...
+                histogram(AxesHandles.HandleST,...
+                st(BpodSystem.Data.Custom.EarlyWithdrawal(startTrial:endTrial))*1000,...
+                binEdges);
             BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.BinWidth = 50;
             BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.FaceColor = 'r';
             BpodSystem.GUIHandles.OutcomePlot.HistSTEarly.EdgeColor = 'none';
-            BpodSystem.GUIHandles.OutcomePlot.HistST = histogram(AxesHandles.HandleST,st(~BpodSystem.Data.Custom.EarlyWithdrawal(startTrial:endTrial))*1000);
+            % Then correct sampling
+            BpodSystem.GUIHandles.OutcomePlot.HistST = ...
+                histogram(AxesHandles.HandleST,...
+                st(~BpodSystem.Data.Custom.EarlyWithdrawal(startTrial:endTrial))*1000, ...
+                binEdges);
             BpodSystem.GUIHandles.OutcomePlot.HistST.BinWidth = 50;
             BpodSystem.GUIHandles.OutcomePlot.HistST.FaceColor = 'b';
             BpodSystem.GUIHandles.OutcomePlot.HistST.EdgeColor = 'none';
