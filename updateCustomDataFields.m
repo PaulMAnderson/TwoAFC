@@ -431,6 +431,9 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
     leftBiasH    = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'LeftBias') );                
     futureBiasH  = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'FutureLeftBias') ); 
     
+    % Default is to not have manual bias control
+    BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'off';   
+
     % Get trial index
     history = 100;        
     idxStart = max(iTrial - history + 1,1);
@@ -458,6 +461,7 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
     
     if iTrial < history % In the first hundred trials we stay even
         TaskParameters.GUI.FutureLeftBias = 0.5;
+        BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'off';           
     else
         switch TaskParameters.GUIMeta.TrialSelection.String{TaskParameters.GUI.TrialSelection}
                 case 'Even'         

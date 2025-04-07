@@ -74,12 +74,16 @@ for trialNum = 1:nNewTrials
         GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(trialIdx), ...
         TaskParameters.GUI.AuditoryStimulusTime);
    
-    %% Correct left/right click train
+    %% Correct left/right click train - Set the first click to be equal
+
+    
     if ~isempty(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) && ...
        ~isempty(BpodSystem.Data.Custom.RightClickTrain{trialIdx})
+        
                 BpodSystem.Data.Custom.LeftClickTrain{trialIdx}(1) =  ...
                     min(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}(1), ...
                     BpodSystem.Data.Custom.RightClickTrain{trialIdx}(1));
+
         BpodSystem.Data.Custom.RightClickTrain{trialIdx}(1) =  ...
             min(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}(1), ...
             BpodSystem.Data.Custom.RightClickTrain{trialIdx}(1));
@@ -105,14 +109,15 @@ for trialNum = 1:nNewTrials
 
     if length(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) >  ...
        length(BpodSystem.Data.Custom.RightClickTrain{trialIdx})
-        BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = double(1);
-    
-    elseif length(BpodSystem.Data.Custom.LeftClickTrain{1}) <  ...
+        BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = true;
+        % disp('More Left Clicks');
+    elseif length(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) <  ...
             length(BpodSystem.Data.Custom.RightClickTrain{trialIdx})
-            BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = double(0);
-    
+            BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = false;
+        % disp('More Right Clicks')
     else
         BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = NaN;
+        % disp('Even Clicks')
     end
     
     BpodSystem.Data.Custom.DV(trialIdx) = ...
