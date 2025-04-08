@@ -109,11 +109,11 @@ for trialNum = 1:nNewTrials
 
     if length(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) >  ...
        length(BpodSystem.Data.Custom.RightClickTrain{trialIdx})
-        BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = true;
+        BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = double(1);
         % disp('More Left Clicks');
     elseif length(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) <  ...
             length(BpodSystem.Data.Custom.RightClickTrain{trialIdx})
-            BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = false;
+            BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = double(0);
         % disp('More Right Clicks')
     else
         BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = NaN;
