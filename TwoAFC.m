@@ -16,9 +16,9 @@ if isempty(fieldnames(TaskParameters))
     TaskParameters.GUIMeta.TimeToChoose.Label = 'Time to make choice';
     TaskParameters.GUI.TimeOutIncorrect = 3; % (s)
     TaskParameters.GUIMeta.TimeOutIncorrect.Label = 'Timeout for Incorrect';
-    TaskParameters.GUI.TimeOutBrokeFixation = 3; % (s)
+    TaskParameters.GUI.TimeOutBrokeFixation = 5; % (s)
     TaskParameters.GUIMeta.TimeOutBrokeFixation.Label = 'Timeout for Sampling Dropout';
-    TaskParameters.GUI.TimeOutSkippedReward = 0; % (s) 
+    TaskParameters.GUI.TimeOutSkippedReward = 3; % (s) 
     TaskParameters.GUIMeta.TimeOutSkippedReward.Label = 'Timeout for Skipping Reward';
     TaskParameters.GUI.StartEasyTrials = 50;
     TaskParameters.GUIMeta.StartEasyTrials.Label = '# Easier Trials at Start';
@@ -60,9 +60,9 @@ if isempty(fieldnames(TaskParameters))
 
     %% StimDelay
     % Stimulus Delay Distribution Parameters
-    TaskParameters.GUI.StimDelayTable.Min = 0.06;
-    TaskParameters.GUI.StimDelayTable.Tau = 0.1;    
-    TaskParameters.GUI.StimDelayTable.Max = 0.1;
+    TaskParameters.GUI.StimDelayTable.Min = 0.04;
+    TaskParameters.GUI.StimDelayTable.Tau = 0.08;    
+    TaskParameters.GUI.StimDelayTable.Max = 0.12;
     TaskParameters.GUIMeta.StimDelayTable.Style = 'table';
     TaskParameters.GUIMeta.StimDelayTable.Label = 'Stimulus Delay Distribution';
     TaskParameters.GUIMeta.StimDelayTable.ColumnLabel = {'Min','Tau','Max'};
@@ -143,7 +143,7 @@ if isempty(fieldnames(TaskParameters))
     % TaskParameters.GUIMeta.ActualEvidence.Label = 'Actual Evidence';
     
     % Minimum Sampling
-    TaskParameters.GUI.MinSampleTable.Min = 0.1;
+    TaskParameters.GUI.MinSampleTable.Min = 0.2;
     TaskParameters.GUI.MinSampleTable.Max = 0.3;
     TaskParameters.GUIMeta.MinSampleTable.Style = 'table';
     TaskParameters.GUIMeta.MinSampleTable.Label = 'Minimum Sampling';
