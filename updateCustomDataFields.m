@@ -412,15 +412,15 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
 
     AuditoryAlpha = TaskParameters.GUI.AuditoryAlpha;
     
-    % Update the GUI
-    paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AuditoryAlpha');
-    paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
-    if iTrial <= TaskParameters.GUI.StartEasyTrials
-        paramHandle.String = '0.1 (Easy)';
-    else
-        paramHandle.String = num2str(TaskParameters.GUI.AuditoryAlpha);
-    end
-    
+    % % Update the GUI
+    % paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AuditoryAlpha');
+    % paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+    % if iTrial <= TaskParameters.GUI.StartEasyTrials
+    %     paramHandle.String = '0.1 (Easy)';
+    % else
+    %     paramHandle.String = num2str(TaskParameters.GUI.AuditoryAlpha);
+    % end
+    % 
     %% Drawing future trials - Trial bias control
 
     % Get handles for trial selection control
@@ -431,7 +431,7 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
     BpodSystem.GUIHandles.ParameterGUI.Params(futureBiasH).Enable = 'off';   
 
     % Get trial index
-    history = 100;        
+    history = 50;        
     idxStart = max(iTrial - history + 1,1);
     considerTrials = idxStart:iTrial; 
     
