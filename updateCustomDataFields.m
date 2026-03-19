@@ -59,7 +59,7 @@ for stateI = statesThisTrial
 
          % How long did the animal take to make a decision (movement time)
         case 'wait_Sin'
-            BpodSystem.Data.Custom.MovementTime(end) = ...
+            BpodSystem.Data.Custom.MovementTime(iTrial) = ...
                 diff(BpodSystem.Data.RawEvents.Trial{end}.States.wait_Sin(1,:));
 
             % Did the animal get a reward>
@@ -353,8 +353,10 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
         % Easy trials are hardcoded to 0.1
         TaskParameters.GUI.AuditoryAlpha = 0.1;
     else
+        history = 50;   
         % Are we are automatically adjusting the alpha?
-        if TaskParameters.GUI.AlphaAutoincrement 
+        if TaskParameters.GUI.AlphaAutoincrement && ...
+            iTrial > history && iTrial > TaskParameters.GUI.StartEasyTrials
 
             % We activate the table
             handleIdx = find(strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AlphaIncrementTable'));                      
@@ -364,41 +366,35 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
             handleIdx = find( strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AlphaTable'));
             handle = BpodSystem.GUIHandles.ParameterGUI.Params(handleIdx);
             handle.ColumnEditable(2) = true;
-    
-            % We need to check the recent performance
-            % Get trial index
-            history = 100;   
-            if iTrial < history 
-                % We don't update the alpha if it's early in the session
-                increaseAlpha = false;
-            else
-                idxStart = max(iTrial - history + 1,1);
-                considerTrials = idxStart:iTrial; 
-            
-                performanceCriteria = 0.80;
-                correctProportion = sum(BpodSystem.Data.Custom.ChoiceCorrect(considerTrials))...
-                                    ./ length(considerTrials);
-                
-                % Is the animal performing with less than 20% errors?
-                if correctProportion >= performanceCriteria
-                    increaseAlpha = true;
-                else
-                    increaseAlpha = false;
-                end
-            end
 
-            % Only update if trial was rewarded
-            if increaseAlpha && BpodSystem.Data.Custom.Rewarded(iTrial) 
-                TaskParameters.GUI.AuditoryAlpha = min(max( ...
-                    TaskParameters.GUI.AuditoryAlpha + TaskParameters.GUI.AlphaIncrementTable.Increase,...
-                    TaskParameters.GUI.AlphaTable.Min),...
-                    TaskParameters.GUI.AlphaTable.Max);
-            elseif ~increaseAlpha && ~BpodSystem.Data.Custom.Rewarded(iTrial)
-                % Decrease
-                TaskParameters.GUI.AuditoryAlpha = max(min( ...
-                    TaskParameters.GUI.AuditoryAlpha - TaskParameters.GUI.AlphaIncrementTable.Decrease, ...
-                    TaskParameters.GUI.AlphaTable.Max),...
-                    TaskParameters.GUI.AlphaTable.Min);
+            idxStart = max(iTrial - history + 1,1);
+            considerTrials = idxStart:iTrial; 
+        
+            performanceCriteria = 0.80;
+            correctProportion = nansum(BpodSystem.Data.Custom.ChoiceCorrect(considerTrials))...
+                                ./ length(considerTrials);
+
+            performanceMet = correctProportion >= performanceCriteria;
+
+            % If animal was performing well
+            if performanceMet
+                % Only increase if trial was rewarded
+                if BpodSystem.Data.Custom.Rewarded(iTrial) 
+                    TaskParameters.GUI.AuditoryAlpha = min(max( ...
+                        TaskParameters.GUI.AuditoryAlpha + TaskParameters.GUI.AlphaIncrementTable.Increase,...
+                        TaskParameters.GUI.AlphaTable.Min),...
+                        TaskParameters.GUI.AlphaTable.Max);
+                end
+            else % Animal is not performing well
+                % We only decrease if this trial wasnt rewarded
+                if ~BpodSystem.Data.Custom.Rewarded(iTrial) && ...
+                   ~BpodSystem.Data.Custom.CatchTrial(iTrial)      
+                    % Decrease
+                    TaskParameters.GUI.AuditoryAlpha = max(min( ...
+                        TaskParameters.GUI.AuditoryAlpha - TaskParameters.GUI.AlphaIncrementTable.Decrease, ...
+                        TaskParameters.GUI.AlphaTable.Max),...
+                        TaskParameters.GUI.AlphaTable.Min);
+                end
             end
         else % We take the set min and deactivate the table 
             % Deactivate Fields
@@ -417,13 +413,13 @@ if iTrial > numel(BpodSystem.Data.Custom.DV) - 5
     AuditoryAlpha = TaskParameters.GUI.AuditoryAlpha;
     
     % Update the GUI
-    % paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AuditoryAlpha');
-    % paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
-    % if iTrial <= TaskParameters.GUI.StartEasyTrials
-    %     paramHandle.String = '0.1 (Easy)';
-    % else
-    %     paramHandle.String = num2str(TaskParameters.GUI.AuditoryAlpha);
-    % end
+    paramIdx    = strcmp(BpodSystem.GUIData.ParameterGUI.ParamNames,'AuditoryAlpha');
+    paramHandle = BpodSystem.GUIHandles.ParameterGUI.Params(paramIdx);
+    if iTrial <= TaskParameters.GUI.StartEasyTrials
+        paramHandle.String = '0.1 (Easy)';
+    else
+        paramHandle.String = num2str(TaskParameters.GUI.AuditoryAlpha);
+    end
     
     %% Drawing future trials - Trial bias control
 

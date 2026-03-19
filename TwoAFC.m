@@ -134,7 +134,7 @@ if isempty(fieldnames(TaskParameters))
 
     TaskParameters.GUI.AlphaAutoincrement = false;
     TaskParameters.GUIMeta.AlphaAutoincrement.Style = 'checkbox';
-    TaskParameters.GUIMeta.AlphaAutoincrement.Label = 'Auto Increment Alpha';
+    TaskParameters.GUIMeta.AlphaAutoincrement.Label = 'Auto Adjust Alpha';
     TaskParameters.GUI.AuditoryAlpha = TaskParameters.GUI.AlphaTable.Min;
     TaskParameters.GUIMeta.AuditoryAlpha.Style = 'text';
     TaskParameters.GUIMeta.AuditoryAlpha.Label = 'Current Alpha';
