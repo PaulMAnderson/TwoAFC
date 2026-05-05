@@ -1,7 +1,11 @@
 function [PT] = DailyAnalysisDual2AFC(varargin)
+% DEPRECATED: This file uses v2-era field names (PT.LeftClickRate, PT.ST,
+% PT.FeedbackTime) and depends on Dual2AFCRicardo which is not present in
+% this repo. It will not run against v4 protocol data. Pending full rewrite.
+%
 %      SYNTAX
-%      [SessionData] = DailyAnalysisDual2AFC 
-%      [SessionData] = DailyAnalysisDual2AFC('Conversion.mat',... 
+%      [SessionData] = DailyAnalysisDual2AFC
+%      [SessionData] = DailyAnalysisDual2AFC('Conversion.mat',...
 %                          'SessionData.mat', 'ParamSelect', 'on')
 %       
 %      DESCRIPTION

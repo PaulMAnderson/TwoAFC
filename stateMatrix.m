@@ -20,20 +20,23 @@ RightPortLED  = strcat('PWM',num2str(RightPort));
 LeftValve = 2^(LeftPort-1);
 RightValve = 2^(RightPort-1);
 
-LeftValveTime  = GetValveTimes(BpodSystem.Data.Custom.RewardMagnitude(iTrial,1), LeftPort);
-RightValveTime  = GetValveTimes(BpodSystem.Data.Custom.RewardMagnitude(iTrial,2), RightPort);
+LeftValveTime  = GetValveTimes(BpodSystem.Data.Custom.rewardAmount(iTrial,1), LeftPort);
+RightValveTime  = GetValveTimes(BpodSystem.Data.Custom.rewardAmount(iTrial,2), RightPort);
 
-LeftRewarded = BpodSystem.Data.Custom.MoreLeftClicks(iTrial);
-if isnan(LeftRewarded)
-    LeftRewarded = rand(1,1)<0.5;
+sideProg = BpodSystem.Data.Custom.sideProgrammed{iTrial};
+if strcmp(sideProg, 'none')
+    sideProg = 'left';  % randomise reward side for equal-evidence trials
+    if rand(1,1) >= 0.5
+        sideProg = 'right';
+    end
 end
 
-if LeftRewarded == 1
+if strcmp(sideProg, 'left')
     leftPokeAction  = 'rewarded_Lin';
-    leftTimer       = 1;    
+    leftTimer       = 1;
     rightPokeAction = 'unrewarded_Rin';
     rightTimer      = 2;
-elseif LeftRewarded == 0
+elseif strcmp(sideProg, 'right')
     leftPokeAction  = 'unrewarded_Lin';
     leftTimer       = 2;
     rightPokeAction = 'rewarded_Rin';
@@ -42,7 +45,7 @@ else
     error('Bpod:Olf2AFC:unknownStim','Undefined stimulus');
 end
 
-if BpodSystem.Data.Custom.CatchTrial(iTrial)
+if BpodSystem.Data.Custom.catchTrial(iTrial)
     RewardDelayCorrect = 20; 
 else
     RewardDelayCorrect = TaskParameters.GUI.RewardDelay;
@@ -66,7 +69,7 @@ earlyDropOutSoftCode = 11; % White noise burst
 
 
 % % wire output depending on trial difficulty 
-% evidence = abs(BpodSystem.Data.Custom.AuditoryOmega(iTrial)-0.5);
+% evidence = abs(BpodSystem.Data.Custom.omega(iTrial)-0.5);
 % binned_omega = discretize(evidence, linspace(0,1,20)); 
 
 % List of wire states

@@ -3,15 +3,12 @@ function generateAuditoryStimuli(nNewTrials, auditoryAlpha, leftBias)
 % and GUI fields as needed
 
 %% Load global variables
-% Would like to remove this and have it take the BpodSystem as in input
-% % variable, or else be a method of an object
-
 global BpodSystem
 global TaskParameters
 
 %% Get the left bias, or set to no bias
 
-if nargin < 4
+if nargin < 3
     try
         leftBias = TaskParameters.GUI.FutureLeftBias;
     catch
@@ -23,24 +20,18 @@ end
 
 BetaRatio = leftBias / (1 - leftBias);
 
-% BetaRatio = (1 - min(0.9,max(0.1,TaskParameters.GUI.LeftBias))) / ...
-%                  min(0.9,max(0.1,TaskParameters.GUI.LeftBias)); 
-
-% use a = ratio*b to yield E[X] = LeftBiasAud using Beta(a,b) pdf
-% cut off between 0.1-0.9 to prevent extreme values (only one side) and div by 
-
 %make a,b symmetric around auditoryAlpha to make B symmetric
-BetaA =  (2 * auditoryAlpha * BetaRatio) / (1 + BetaRatio); 
+BetaA =  (2 * auditoryAlpha * BetaRatio) / (1 + BetaRatio);
 BetaB = (auditoryAlpha - BetaA) + auditoryAlpha;
 
 %% Generate Stimuli
 
-% Need to account for very first trials where we don't have the DV 
+% Need to account for very first trials where we don't have evidenceStrength
 % calculated yet
-if isfield(BpodSystem.Data.Custom,'DV')
-    latestTrial = numel(BpodSystem.Data.Custom.DV); 
+if isfield(BpodSystem.Data.Custom,'evidenceStrength')
+    latestTrial = numel(BpodSystem.Data.Custom.evidenceStrength);
 else
-    latestTrial = numel(BpodSystem.Data.Custom.TrialNumber);
+    latestTrial = numel(BpodSystem.Data.Custom.trialNumber);
 end
 
 for trialNum = 1:nNewTrials
@@ -48,83 +39,82 @@ for trialNum = 1:nNewTrials
     % Get the trial index
     trialIdx = latestTrial + trialNum;
 
-    % Save the alpha (probably not neccessary anymore but kept for
-    % backwards compatability
-    BpodSystem.Data.Custom.EffectiveAlpha(trialIdx) = auditoryAlpha; 
+    % Save the alpha
+    BpodSystem.Data.Custom.effectiveAlpha(trialIdx) = auditoryAlpha;
 
     % Check for deliberate 50-50 trial
     if rand(1,1) < TaskParameters.GUI.Proportion50Fifty && trialIdx > TaskParameters.GUI.StartEasyTrials
-        BpodSystem.Data.Custom.AuditoryOmega(trialIdx) = 0.5;
+        BpodSystem.Data.Custom.omega(trialIdx) = 0.5;
     else
-        BpodSystem.Data.Custom.AuditoryOmega(trialIdx) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
+        BpodSystem.Data.Custom.omega(trialIdx) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
     end
 
     %% Calculate click rates
-    BpodSystem.Data.Custom.LeftClickRate(trialIdx) = ...
-        round(BpodSystem.Data.Custom.AuditoryOmega(trialIdx)*TaskParameters.GUI.SumRates);
+    BpodSystem.Data.Custom.clickRateLeft(trialIdx) = ...
+        round(BpodSystem.Data.Custom.omega(trialIdx)*TaskParameters.GUI.SumRates);
 
-    BpodSystem.Data.Custom.RightClickRate(trialIdx) = ...
-        round((1-BpodSystem.Data.Custom.AuditoryOmega(trialIdx))*TaskParameters.GUI.SumRates);
+    BpodSystem.Data.Custom.clickRateRight(trialIdx) = ...
+        round((1-BpodSystem.Data.Custom.omega(trialIdx))*TaskParameters.GUI.SumRates);
 
-    BpodSystem.Data.Custom.LeftClickTrain{trialIdx} = ...
-        GeneratePoissonClickTrain(BpodSystem.Data.Custom.LeftClickRate(trialIdx), ...
+    BpodSystem.Data.Custom.clickTrainLeft{trialIdx} = ...
+        GeneratePoissonClickTrain(BpodSystem.Data.Custom.clickRateLeft(trialIdx), ...
         TaskParameters.GUI.AuditoryStimulusTime);
 
-    BpodSystem.Data.Custom.RightClickTrain{trialIdx} = ...
-        GeneratePoissonClickTrain(BpodSystem.Data.Custom.RightClickRate(trialIdx), ...
+    BpodSystem.Data.Custom.clickTrainRight{trialIdx} = ...
+        GeneratePoissonClickTrain(BpodSystem.Data.Custom.clickRateRight(trialIdx), ...
         TaskParameters.GUI.AuditoryStimulusTime);
-   
+
     %% Correct left/right click train - Set the first click to be equal
 
-    
-    if ~isempty(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) && ...
-       ~isempty(BpodSystem.Data.Custom.RightClickTrain{trialIdx})
-        
-                BpodSystem.Data.Custom.LeftClickTrain{trialIdx}(1) =  ...
-                    min(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}(1), ...
-                    BpodSystem.Data.Custom.RightClickTrain{trialIdx}(1));
+    if ~isempty(BpodSystem.Data.Custom.clickTrainLeft{trialIdx}) && ...
+       ~isempty(BpodSystem.Data.Custom.clickTrainRight{trialIdx})
 
-        BpodSystem.Data.Custom.RightClickTrain{trialIdx}(1) =  ...
-            min(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}(1), ...
-            BpodSystem.Data.Custom.RightClickTrain{trialIdx}(1));
+        BpodSystem.Data.Custom.clickTrainLeft{trialIdx}(1) = ...
+            min(BpodSystem.Data.Custom.clickTrainLeft{trialIdx}(1), ...
+                BpodSystem.Data.Custom.clickTrainRight{trialIdx}(1));
 
-    elseif  isempty(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) &&  ...
-            ~isempty(BpodSystem.Data.Custom.RightClickTrain{trialIdx})
-        
-        BpodSystem.Data.Custom.LeftClickTrain{trialIdx}(1) =  ...
-            BpodSystem.Data.Custom.RightClickTrain{trialIdx}(1);
-    
-    elseif ~isempty(BpodSystem.Data.Custom.LeftClickTrain{1}) &&  ...
-            isempty(BpodSystem.Data.Custom.RightClickTrain{trialIdx})
-        
-        BpodSystem.Data.Custom.RightClickTrain{trialIdx}(1) =  ...
-            BpodSystem.Data.Custom.LeftClickTrain{trialIdx}(1);
+        BpodSystem.Data.Custom.clickTrainRight{trialIdx}(1) = ...
+            min(BpodSystem.Data.Custom.clickTrainLeft{trialIdx}(1), ...
+                BpodSystem.Data.Custom.clickTrainRight{trialIdx}(1));
+
+    elseif isempty(BpodSystem.Data.Custom.clickTrainLeft{trialIdx}) && ...
+           ~isempty(BpodSystem.Data.Custom.clickTrainRight{trialIdx})
+
+        BpodSystem.Data.Custom.clickTrainLeft{trialIdx}(1) = ...
+            BpodSystem.Data.Custom.clickTrainRight{trialIdx}(1);
+
+    elseif ~isempty(BpodSystem.Data.Custom.clickTrainLeft{trialIdx}) && ...
+           isempty(BpodSystem.Data.Custom.clickTrainRight{trialIdx})
+
+        BpodSystem.Data.Custom.clickTrainRight{trialIdx}(1) = ...
+            BpodSystem.Data.Custom.clickTrainLeft{trialIdx}(1);
 
     else
-        BpodSystem.Data.Custom.LeftClickTrain{trialIdx} =  ...
-            round(1/BpodSystem.Data.Custom.LeftClickRate*10000)/10000;
-        BpodSystem.Data.Custom.RightClickTrain{trialIdx} =  ...
-            round(1/BpodSystem.Data.Custom.RightClickRate*10000)/10000;
+        % Both trains are empty: generate fallback single-click trains
+        BpodSystem.Data.Custom.clickTrainLeft{trialIdx} = ...
+            round(1/BpodSystem.Data.Custom.clickRateLeft(trialIdx)*10000)/10000;
+        BpodSystem.Data.Custom.clickTrainRight{trialIdx} = ...
+            round(1/BpodSystem.Data.Custom.clickRateRight(trialIdx)*10000)/10000;
     end
 
-    if length(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) >  ...
-       length(BpodSystem.Data.Custom.RightClickTrain{trialIdx})
-        BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = double(1);
-        % disp('More Left Clicks');
-    elseif length(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) <  ...
-            length(BpodSystem.Data.Custom.RightClickTrain{trialIdx})
-            BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = double(0);
-        % disp('More Right Clicks')
+    nLeft  = length(BpodSystem.Data.Custom.clickTrainLeft{trialIdx});
+    nRight = length(BpodSystem.Data.Custom.clickTrainRight{trialIdx});
+
+    if nLeft > nRight
+        BpodSystem.Data.Custom.sideProgrammed{trialIdx} = 'left';
+    elseif nRight > nLeft
+        BpodSystem.Data.Custom.sideProgrammed{trialIdx} = 'right';
     else
-        BpodSystem.Data.Custom.MoreLeftClicks(trialIdx) = NaN;
-        % disp('Even Clicks')
+        BpodSystem.Data.Custom.sideProgrammed{trialIdx} = 'none';
     end
-    
-    BpodSystem.Data.Custom.DV(trialIdx) = ...
-    (length(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) -  ...
-    length(BpodSystem.Data.Custom.RightClickTrain{trialIdx})) ./ ...
-    (length(BpodSystem.Data.Custom.LeftClickTrain{trialIdx}) + ...
-    length(BpodSystem.Data.Custom.RightClickTrain{trialIdx}));
+
+    % evidenceStrength: positive = right-dominant (canonical convention)
+    if (nLeft + nRight) > 0
+        BpodSystem.Data.Custom.evidenceStrength(trialIdx) = ...
+            (nRight - nLeft) / (nRight + nLeft);
+    else
+        BpodSystem.Data.Custom.evidenceStrength(trialIdx) = 0;
+    end
 
 end
 

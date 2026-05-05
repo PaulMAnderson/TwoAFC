@@ -211,27 +211,27 @@ end
 BpodParameterGUI('init', TaskParameters);
 
 %% Initializing data (trial type) vectors
-BpodSystem.Data.Custom.TrialNumber      = 1;
+BpodSystem.Data.Custom.trialNumber      = 1;
 
-BpodSystem.Data.Custom.ChoiceLeft       = NaN;
-BpodSystem.Data.Custom.ChoiceCorrect    = NaN;
-BpodSystem.Data.Custom.Rewarded         = false;
-BpodSystem.Data.Custom.BrokeFixation    = false;
-BpodSystem.Data.Custom.EarlyWithdrawal  = false;
+BpodSystem.Data.Custom.choiceLeft       = NaN;
+BpodSystem.Data.Custom.choiceCorrect    = NaN;
+BpodSystem.Data.Custom.rewarded         = false;
+BpodSystem.Data.Custom.brokeFixation    = false;
+BpodSystem.Data.Custom.earlyWithdrawal  = false;
 
-BpodSystem.Data.Custom.CatchTrial       = false;
+BpodSystem.Data.Custom.catchTrial       = false;
 
-BpodSystem.Data.Custom.ChoicePortTime   = NaN;
-BpodSystem.Data.Custom.FixationTime     = NaN;
-BpodSystem.Data.Custom.MovementTime     = NaN;
-BpodSystem.Data.Custom.SamplingTime     = NaN;
-BpodSystem.Data.Custom.LingersTime      = NaN;
+BpodSystem.Data.Custom.waitDuration     = NaN;
+BpodSystem.Data.Custom.fixationTime     = NaN;
+BpodSystem.Data.Custom.movementTime     = NaN;
+BpodSystem.Data.Custom.samplingDuration = NaN;
+BpodSystem.Data.Custom.lingerDuration   = NaN;
 
-BpodSystem.Data.Custom.RewardMagnitude = ...
+BpodSystem.Data.Custom.rewardAmount = ...
     [TaskParameters.GUI.RewardAmountTable.Left TaskParameters.GUI.RewardAmountTable.Right];
 
-BpodSystem.Data.Custom.TrialNumber = [];
-BpodSystem.Data.Custom.StartEasyTrials = TaskParameters.GUI.StartEasyTrials;
+BpodSystem.Data.Custom.trialNumber = [];
+BpodSystem.Data.Custom.startEasyTrials = TaskParameters.GUI.StartEasyTrials;
 
 % make auditory stimuli for first trials
 % Draw 2 trials, from trial 0, with auditory alpha 0.1 and even (0.5) bias
@@ -244,9 +244,9 @@ BpodSystem.Data.Info.Rig = getenv('computername');
 % [~,BpodSystem.Data.Custom.Subject] = fileparts(fileparts(fileparts(fileparts(BpodSystem.DataPath))));
 BpodSystem.Data.Info.Subject = BpodSystem.GUIData.SubjectName;
 
-% Protocol Version Data 
+% Protocol Version Data
 BpodSystem.Data.Info.ProtocolName    = 'TwoAFC';
-BpodSystem.Data.Info.ProtocolVersion = '2.0';
+BpodSystem.Data.Info.ProtocolVersion = '4.0';
 
 %% Configuring PulsePal
 
@@ -270,8 +270,8 @@ BpodSystem.Data.Custom.PulsePalParamFeedback=PulsePalParamFeedback;
 clear PulsePalParamFeedback PulsePalParamStimulus
 if ~BpodSystem.EmulatorMode
     ProgramPulsePal(BpodSystem.Data.Custom.PulsePalParamStimulus);
-    SendCustomPulseTrain(1, BpodSystem.Data.Custom.RightClickTrain{1}, ones(1,length(BpodSystem.Data.Custom.RightClickTrain{1}))*5);
-    SendCustomPulseTrain(2, BpodSystem.Data.Custom.LeftClickTrain{1}, ones(1,length(BpodSystem.Data.Custom.LeftClickTrain{1}))*5);
+    SendCustomPulseTrain(1, BpodSystem.Data.Custom.clickTrainRight{1}, ones(1,length(BpodSystem.Data.Custom.clickTrainRight{1}))*5);
+    SendCustomPulseTrain(2, BpodSystem.Data.Custom.clickTrainLeft{1}, ones(1,length(BpodSystem.Data.Custom.clickTrainLeft{1}))*5);
 end
 
 %% Initialize plots
