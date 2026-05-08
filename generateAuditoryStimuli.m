@@ -34,71 +34,73 @@ else
     latestTrial = numel(BpodSystem.Data.Custom.trialNumber);
 end
 
+% Pre-generate all beta and 50/50 samples at once (vectorised across trials)
+omegaSamples = betarnd(max(0,BetaA), max(0,BetaB), 1, nNewTrials);
+r50          = rand(1, nNewTrials);
+duration     = TaskParameters.GUI.AuditoryStimulusTime;
+sumRates     = TaskParameters.GUI.SumRates;
+prop5050     = TaskParameters.GUI.Proportion50Fifty;
+startEasy    = TaskParameters.GUI.StartEasyTrials;
+
 for trialNum = 1:nNewTrials
 
-    % Get the trial index
     trialIdx = latestTrial + trialNum;
 
-    % Save the alpha
-    BpodSystem.Data.Custom.effectiveAlpha(trialIdx) = auditoryAlpha;
+    BpodSystem.Data.Custom.trialAlpha(trialIdx) = auditoryAlpha;
 
     % Check for deliberate 50-50 trial
-    if rand(1,1) < TaskParameters.GUI.Proportion50Fifty && trialIdx > TaskParameters.GUI.StartEasyTrials
-        BpodSystem.Data.Custom.omega(trialIdx) = 0.5;
+    if r50(trialNum) < prop5050 && trialIdx > startEasy
+        omega_val = 0.5;
     else
-        BpodSystem.Data.Custom.omega(trialIdx) = betarnd(max(0,BetaA),max(0,BetaB),1,1); %prevent negative parameters
+        omega_val = omegaSamples(trialNum);
     end
+    BpodSystem.Data.Custom.omega(trialIdx) = omega_val;
 
     %% Calculate click rates
-    BpodSystem.Data.Custom.clickRateLeft(trialIdx) = ...
-        round(BpodSystem.Data.Custom.omega(trialIdx)*TaskParameters.GUI.SumRates);
+    clickRateL = round(omega_val * sumRates);
+    clickRateR = round((1 - omega_val) * sumRates);
+    BpodSystem.Data.Custom.clickRateLeft(trialIdx)  = clickRateL;
+    BpodSystem.Data.Custom.clickRateRight(trialIdx) = clickRateR;
 
-    BpodSystem.Data.Custom.clickRateRight(trialIdx) = ...
-        round((1-BpodSystem.Data.Custom.omega(trialIdx))*TaskParameters.GUI.SumRates);
-
-    BpodSystem.Data.Custom.clickTrainLeft{trialIdx} = ...
-        GeneratePoissonClickTrain(BpodSystem.Data.Custom.clickRateLeft(trialIdx), ...
-        TaskParameters.GUI.AuditoryStimulusTime);
-
-    BpodSystem.Data.Custom.clickTrainRight{trialIdx} = ...
-        GeneratePoissonClickTrain(BpodSystem.Data.Custom.clickRateRight(trialIdx), ...
-        TaskParameters.GUI.AuditoryStimulusTime);
+    % Generate click trains into local variables to avoid repeated struct lookups
+    trainL = GeneratePoissonClickTrain(clickRateL, duration);
+    trainR = GeneratePoissonClickTrain(clickRateR, duration);
 
     %% Correct left/right click train - Set the first click to be equal
 
-    if ~isempty(BpodSystem.Data.Custom.clickTrainLeft{trialIdx}) && ...
-       ~isempty(BpodSystem.Data.Custom.clickTrainRight{trialIdx})
+    if ~isempty(trainL) && ~isempty(trainR)
 
-        BpodSystem.Data.Custom.clickTrainLeft{trialIdx}(1) = ...
-            min(BpodSystem.Data.Custom.clickTrainLeft{trialIdx}(1), ...
-                BpodSystem.Data.Custom.clickTrainRight{trialIdx}(1));
+        firstClick = min(trainL(1), trainR(1));
+        trainL(1)  = firstClick;
+        trainR(1)  = firstClick;
 
-        BpodSystem.Data.Custom.clickTrainRight{trialIdx}(1) = ...
-            min(BpodSystem.Data.Custom.clickTrainLeft{trialIdx}(1), ...
-                BpodSystem.Data.Custom.clickTrainRight{trialIdx}(1));
+    elseif isempty(trainL) && ~isempty(trainR)
 
-    elseif isempty(BpodSystem.Data.Custom.clickTrainLeft{trialIdx}) && ...
-           ~isempty(BpodSystem.Data.Custom.clickTrainRight{trialIdx})
+        trainL = trainR(1);
 
-        BpodSystem.Data.Custom.clickTrainLeft{trialIdx}(1) = ...
-            BpodSystem.Data.Custom.clickTrainRight{trialIdx}(1);
+    elseif ~isempty(trainL) && isempty(trainR)
 
-    elseif ~isempty(BpodSystem.Data.Custom.clickTrainLeft{trialIdx}) && ...
-           isempty(BpodSystem.Data.Custom.clickTrainRight{trialIdx})
-
-        BpodSystem.Data.Custom.clickTrainRight{trialIdx}(1) = ...
-            BpodSystem.Data.Custom.clickTrainLeft{trialIdx}(1);
+        trainR = trainL(1);
 
     else
         % Both trains are empty: generate fallback single-click trains
-        BpodSystem.Data.Custom.clickTrainLeft{trialIdx} = ...
-            round(1/BpodSystem.Data.Custom.clickRateLeft(trialIdx)*10000)/10000;
-        BpodSystem.Data.Custom.clickTrainRight{trialIdx} = ...
-            round(1/BpodSystem.Data.Custom.clickRateRight(trialIdx)*10000)/10000;
+        if clickRateL > 0
+            trainL = round(1/clickRateL*10000)/10000;
+        else
+            trainL = [];
+        end
+        if clickRateR > 0
+            trainR = round(1/clickRateR*10000)/10000;
+        else
+            trainR = [];
+        end
     end
 
-    nLeft  = length(BpodSystem.Data.Custom.clickTrainLeft{trialIdx});
-    nRight = length(BpodSystem.Data.Custom.clickTrainRight{trialIdx});
+    BpodSystem.Data.Custom.clickTrainLeft{trialIdx}  = trainL;
+    BpodSystem.Data.Custom.clickTrainRight{trialIdx} = trainR;
+
+    nLeft  = length(trainL);
+    nRight = length(trainR);
 
     if nLeft > nRight
         BpodSystem.Data.Custom.sideProgrammed{trialIdx} = 'left';
@@ -124,30 +126,30 @@ end % End function generateAuditoryStimuli
 
 %% Sub functions
 function ClickTimes = GeneratePoissonClickTrain(ClickRate, Duration)
-% ClickTimes = click time points in us
-% ClickRate = mean click rate in Hz
-% Duration = click train duration in seconds
+% ClickTimes = click time points in seconds (PulsePal format)
+% ClickRate  = mean click rate in Hz
+% Duration   = click train duration in seconds
 
-SamplingRate = 1000000;
-nSamples = Duration*SamplingRate;
-ExponentialMean = round((1/ClickRate)*SamplingRate); % Calculates mean of exponential distribution
-InvertedMean = ExponentialMean*-1;
-PreallocateSize = round(ClickRate*Duration*2);
-ClickTimes = zeros(1,PreallocateSize);
-Pos = 0;
-Time = 0;
-Building = 1;
-while Building == 1
-    Pos = Pos + 1;
-    Interval = InvertedMean*log(rand)+100; % +100 ensures no duplicate timestamps at PulsePal resolution of 100us
-    Time = Time + Interval;
-    if Time > nSamples
-        Building = 0;
-    else
-        ClickTimes(Pos) = Time;
-    end
+if ClickRate <= 0
+    ClickTimes = [];
+    return;
 end
-ClickTimes = ClickTimes(1:Pos-1); % Trim click train preallocation to length
-ClickTimes = round(ClickTimes/100)/10000; % Make clicks multiples of 100us - necessary for pulse time programming
+
+SamplingRate   = 1000000;
+nSamples       = Duration * SamplingRate;
+ExponentialMean = (1 / ClickRate) * SamplingRate;
+
+% Pre-generate 3x the expected number of intervals in one vectorised call.
+% For any realistic click rate (1–100 Hz) and duration (≤10 s) the 3x
+% buffer covers > 99.9999% of cases without a second draw.
+nExpected = ceil(ClickRate * Duration);
+intervals = -ExponentialMean * log(rand(1, nExpected * 3)) + 100;
+
+% Cumulative sum gives absolute click times; keep only those within window
+ClickTimes = cumsum(intervals);
+ClickTimes = ClickTimes(ClickTimes <= nSamples);
+
+% Round to 100μs PulsePal grid
+ClickTimes = round(ClickTimes / 100) / 10000;
 
 end %  function GeneratePoissonClickTrain

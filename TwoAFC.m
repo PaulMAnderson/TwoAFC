@@ -223,7 +223,7 @@ BpodSystem.Data.Custom.catchTrial       = false;
 
 BpodSystem.Data.Custom.waitDuration     = NaN;
 BpodSystem.Data.Custom.fixationTime     = NaN;
-BpodSystem.Data.Custom.movementTime     = NaN;
+BpodSystem.Data.Custom.movementDuration = NaN;
 BpodSystem.Data.Custom.samplingDuration = NaN;
 BpodSystem.Data.Custom.lingerDuration   = NaN;
 
